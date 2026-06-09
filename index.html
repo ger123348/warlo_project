@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WARLO - Sistem Informasi Mitigasi Bencana Tanah Longsor Lampung</title>
+    
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+    <!-- Overlay Mobile -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle"><i class='bx bx-menu'></i></button>
+            <div class="header-logo">WL</div>
+            <div class="header-title">
+                <h1>WARLO GIS Dashboard</h1>
+                <p>Mitigasi & Respons Darurat Tanah Longsor Prov. Lampung</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span class="status-text">Sistem Aktif</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-nav">
+            <div class="nav-section-title">Menu Utama</div>
+            <a href="#" class="nav-item active" data-action="dashboard">
+                <i class='bx bxs-dashboard'></i> Dashboard & Peta
+            </a>
+            <a href="#" class="nav-item" data-panel="panel-histori">
+                <i class='bx bx-history'></i> Histori Kejadian
+            </a>
+            
+            <div class="nav-section-title">Modul Mitigasi</div>
+            
+            <!-- Nested Menu Edukasi -->
+            <div class="nav-item nav-toggle" style="cursor: pointer;">
+                <i class='bx bx-book-reader'></i> Edukasi Kebencanaan
+                <i class='bx bx-chevron-right nav-chevron'></i>
+            </div>
+            <div class="nav-sub">
+                <a href="#" class="nav-item" data-panel="panel-ciri">Ciri-ciri Awal</a>
+                <a href="#" class="nav-item" data-panel="panel-sebelum">Sebelum Longsor</a>
+                <a href="#" class="nav-item" data-panel="panel-saat">Saat Longsor</a>
+                <a href="#" class="nav-item" data-panel="panel-sesudah">Sesudah Longsor</a>
+            </div>
+
+            <a href="#" class="nav-item" data-panel="panel-aman">
+                <i class='bx bx-building-house'></i> Bangunan Aman
+            </a>
+            
+            <div class="nav-section-title">Sistem</div>
+            <a href="#" class="nav-item" data-panel="panel-about">
+                <i class='bx bx-info-circle'></i> Tentang Sistem
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        
+        <!-- STATS BAR -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-icon red"><i class='bx bx-landscape'></i></div>
+                <div class="stat-info">
+                    <h3 id="stat-kejadian">3</h3>
+                    <p>Total Kejadian Longsor</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class='bx bx-error'></i></div>
+                <div class="stat-info">
+                    <h3 id="stat-zona">-</h3>
+                    <p>Zona Risiko Longsor</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class='bx bx-home-heart'></i></div>
+                <div class="stat-info">
+                    <h3 id="stat-posko">-</h3>
+                    <p>Titik Safe Zone</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class='bx bx-plus-medical'></i></div>
+                <div class="stat-info">
+                    <h3 id="stat-faskes">-</h3>
+                    <p>Fasilitas Kesehatan</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class='bx bx-map-pin'></i></div>
+                <div class="stat-info">
+                    <h3 id="stat-kabupaten">15</h3>
+                    <p>Kab/Kota Terpantau</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAP WRAPPER -->
+        <div class="map-wrap">
+            <div id="map"></div>
+
+            <!-- LOCATE ME BUTTON (Top Right) -->
+            <button class="locate-me-btn" id="locateMeBtn" title="Lokasi Saya">
+                <i class='bx bx-target-lock'></i>
+            </button>
+
+            <!-- LAYER CONTROLS (Top Right) -->
+            <div class="layer-controls">
+                <button class="layer-toggle-btn" id="layerToggleBtn">
+                    <i class='bx bx-layer'></i> Layer Peta <i class='bx bx-chevron-down' style="margin-left: auto; font-size: 14px;"></i>
+                </button>
+                <div class="layer-dropdown" id="layerDropdown">
+                    <label class="layer-option">
+                        <input type="checkbox" id="toggleZona" checked> Zona Kerawanan
+                    </label>
+                    <label class="layer-option">
+                        <input type="checkbox" id="toggleJalur" checked> Jalur Evakuasi
+                    </label>
+                    <label class="layer-option">
+                        <input type="checkbox" id="toggleSafe" checked> Titik Safe Zone
+                    </label>
+                </div>
+            </div>
+
+            <!-- MAP LEGEND (Bottom Right) -->
+            <div class="map-legend">
+                <h4><i class='bx bx-list-ul'></i> Legenda Peta</h4>
+                
+                <div style="margin-bottom: 8px; font-weight: 600; font-size: 11px; margin-top: 8px;">Zona Kerawanan Longsor</div>
+                <div class="legend-item"><div class="legend-rect" style="background: #EF4444;"></div> Risiko Tinggi</div>
+                <div class="legend-item"><div class="legend-rect" style="background: #F59E0B;"></div> Risiko Sedang</div>
+                <div class="legend-item"><div class="legend-rect" style="background: #22C55E;"></div> Risiko Rendah</div>
+                
+                <div style="margin-bottom: 8px; font-weight: 600; font-size: 11px; margin-top: 12px;">Infrastruktur Evakuasi</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #EA580C;"></div> Posko Evakuasi</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #16A34A;"></div> Titik Kumpul (Safe Zone)</div>
+                <div class="legend-item"><div class="legend-line" style="background: #2563EB;"></div> Jalur Evakuasi Utama</div>
+                <div class="legend-item"><div class="legend-line" style="background: #0EA5E9; border-top: 2px dashed #fff;"></div> Jalur Alternatif</div>
+                
+                <div style="margin-bottom: 8px; font-weight: 600; font-size: 11px; margin-top: 12px;">Fasilitas Bawaan</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #ff0000; width: 8px; height: 8px;"></div> Rumah Sakit / Klinik</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #ffffff; width: 8px; height: 8px;"></div> Balai Desa</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #00ff00; width: 8px; height: 8px;"></div> Apotek & Obat</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #ffd700; width: 8px; height: 8px;"></div> Praktik Dokter</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #ff66cc; width: 8px; height: 8px;"></div> Pasar Logistik</div>
+                <div class="legend-item"><div class="legend-dot" style="background: #00b0ff; width: 8px; height: 8px;"></div> Sumber Air Darurat</div>
+            </div>
+
+            <!-- PANELS -->
+            
+            <!-- PANEL: HISTORI -->
+            <div class="side-panel" id="panel-histori">
+                <div class="panel-header">
+                    <h3>Histori Longsor</h3>
+                    <button class="panel-close"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="panel-body">
+                    <div class="history-filters">
+                        <select class="filter-select">
+                            <option>Semua Tahun</option>
+                            <option>2026</option>
+                            <option>2025</option>
+                            <option>2024</option>
+                        </select>
+                        <select class="filter-select">
+                            <option>Semua Kab/Kota</option>
+                            <option>Tanggamus</option>
+                            <option>Lampung Barat</option>
+                            <option>Pesisir Barat</option>
+                        </select>
+                    </div>
+                    
+                    <div class="timeline">
+                        <div class="timeline-item" data-lat="-5.45" data-lng="104.60">
+                            <div class="timeline-date">12 Mei 2026</div>
+                            <div class="timeline-title">Longsor Jalan Lintas Barat</div>
+                            <div class="timeline-desc">Material menutupi jalan utama Tanggamus-Pesisir Barat sepanjang 50m.</div>
+                            <span class="timeline-badge badge-high">Risiko Tinggi</span>
+                        </div>
+                        <div class="timeline-item" data-lat="-5.02" data-lng="104.10">
+                            <div class="timeline-date">3 April 2026</div>
+                            <div class="timeline-title">Longsor Pemukiman Liwa</div>
+                            <div class="timeline-desc">Tanah bergerak mengancam 4 rumah di lereng bukit Liwa.</div>
+                            <span class="timeline-badge badge-medium">Risiko Sedang</span>
+                        </div>
+                        <div class="timeline-item" data-lat="-5.38" data-lng="104.98">
+                            <div class="timeline-date">28 Jan 2026</div>
+                            <div class="timeline-title">Amblesan Tanah Gisting</div>
+                            <div class="timeline-desc">Retakan tanah muncul pasca hujan deras 3 hari berturut-turut.</div>
+                            <span class="timeline-badge badge-medium">Risiko Sedang</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL: BANGUNAN AMAN -->
+            <div class="side-panel" id="panel-aman">
+                <div class="panel-header">
+                    <h3>Bangunan Aman Lereng</h3>
+                    <button class="panel-close"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="panel-body">
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6;">Panduan teknis mendirikan bangunan di daerah dengan kemiringan tanah berisiko menurut standar BNPB.</p>
+                    
+                    <div class="building-grid">
+                        <div class="building-card">
+                            <i class='bx bx-layer'></i>
+                            <h4>Pondasi Dalam</h4>
+                            <p>Gunakan tiang pancang mencapai batuan keras (bedrock).</p>
+                        </div>
+                        <div class="building-card">
+                            <i class='bx bx-cube'></i>
+                            <h4>Material Ringan</h4>
+                            <p>Kurangi beban lereng dengan baja ringan, kayu, atau GRC.</p>
+                        </div>
+                        <div class="building-card">
+                            <i class='bx bx-shape-square'></i>
+                            <h4>Struktur Fleksibel</h4>
+                            <p>Sistem join bangunan yang bisa mentolerir pergerakan tanah mikro.</p>
+                        </div>
+                        <div class="building-card">
+                            <i class='bx bx-run'></i>
+                            <h4>Jalur Darurat</h4>
+                            <p>Pintu keluar mengarah berlawanan dari tebing utama.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL: ABOUT -->
+            <div class="side-panel" id="panel-about">
+                <div class="panel-header">
+                    <h3>Tentang WARLO</h3>
+                    <button class="panel-close"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="panel-body">
+                    <div class="about-section">
+                        <h4><i class='bx bx-target-lock'></i> Tujuan Sistem</h4>
+                        <p>Web-GIS WARLO (Warning Longsor) adalah dashboard operasional instansi pemerintah (BPBD/BNPB) Provinsi Lampung untuk monitoring, pemetaan fasilitas evakuasi, dan media edukasi publik berfokus khusus pada mitigasi bencana tanah longsor.</p>
+                    </div>
+                    <div class="about-section">
+                        <h4><i class='bx bx-data'></i> Sumber Data</h4>
+                        <p>Data spasial terhubung dengan database PostGIS lokal. Peta menggunakan basemap ringan CartoDB. Layer tambahan seperti rumah sakit, apotek, dan posko menggunakan standar GeoJSON OGC.</p>
+                    </div>
+                    <div class="about-section" style="margin-top: 30px; text-align: center; border-top: 1px dashed var(--border); padding-top: 20px;">
+                        <p style="font-size: 11px; font-weight: 600;">Sistem Informasi Geografis Berbasis Web<br>Provinsi Lampung © 2026</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL EDUKASI 1: CIRI AWAL -->
+            <div class="side-panel" id="panel-ciri">
+                <div class="panel-header">
+                    <h3>Ciri-ciri Awal Longsor</h3>
+                    <button class="panel-close"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="panel-body">
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #FFF7ED; color: #EA580C;"><i class='bx bx-objects-horizontal-left'></i></div>
+                            <h4>Retakan Tanah</h4>
+                        </div>
+                        <ul>
+                            <li>Munculnya retakan memanjang di permukaan tanah, tebing, atau jalan.</li>
+                            <li>Retakan biasanya berbentuk melengkung searah tebing.</li>
+                        </ul>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #F0FDF4; color: #16A34A;"><i class='bx bx-leaf'></i></div>
+                            <h4>Pohon Miring</h4>
+                        </div>
+                        <ul>
+                            <li>Pohon, tiang listrik, atau pagar tampak mendadak miring.</li>
+                            <li>Pintu atau jendela rumah tiba-tiba sulit dibuka/ditutup akibat pergeseran tanah.</li>
+                        </ul>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #EFF6FF; color: #2563EB;"><i class='bx bx-water'></i></div>
+                            <h4>Mata Air Keruh</h4>
+                        </div>
+                        <ul>
+                            <li>Air sumur atau mata air tiba-tiba menjadi sangat keruh.</li>
+                            <li>Muncul mata air baru secara mendadak di lereng atau rembesan air tak wajar.</li>
+                        </ul>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #FEF2F2; color: #DC2626;"><i class='bx bx-volume-full'></i></div>
+                            <h4>Gemuruh dari Lereng</h4>
+                        </div>
+                        <ul>
+                            <li>Terdengar suara gemuruh, dentuman, atau pohon patah dari arah bukit/tebing.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL EDUKASI 2: SEBELUM LONGSOR -->
+            <div class="side-panel" id="panel-sebelum">
+                <div class="panel-header">
+                    <h3>Sebelum Longsor (Pencegahan)</h3>
+                    <button class="panel-close"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="panel-body">
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #F0FDF4; color: #16A34A;"><i class='bx bx-shape-polygon'></i></div>
+                            <h4>Sistem Terasering</h4>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; padding-bottom: 10px;">Mengubah lereng yang miring menjadi bertingkat-tingkat untuk menahan erosi dan laju aliran air permukaan.</p>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #F0FDF4; color: #16A34A;"><i class='bx bxl-flutter'></i></div>
+                            <h4>Vegetasi Akar Dalam</h4>
+                        </div>
+                        <ul>
+                            <li>Penanaman Rumput Vetiver (Akar Wangi) yang akarnya menembus tanah hingga 3-4 meter.</li>
+                            <li>Penanaman Bambu di sepanjang bibir sungai/tebing lereng.</li>
+                        </ul>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #EFF6FF; color: #2563EB;"><i class='bx bx-droplet'></i></div>
+                            <h4>Drainase Permukaan</h4>
+                        </div>
+                        <ul>
+                            <li>Membangun saluran air (drainase) agar air hujan tidak menggenang atau meresap langsung ke titik lemah lereng.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL EDUKASI 3: SAAT LONGSOR -->
+            <div class="side-panel" id="panel-saat">
+                <div class="panel-header">
+                    <h3>Saat Terjadi Longsor</h3>
+                    <button class="panel-close"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="panel-body">
+                    <div class="edu-card" style="border-left: 4px solid var(--danger);">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #FEF2F2; color: #DC2626;"><i class='bx bx-run'></i></div>
+                            <h4>Evakuasi Cepat</h4>
+                        </div>
+                        <ul>
+                            <li>Segera tinggalkan rumah dan jangan membawa barang bawaan berat. Fokus pada nyawa.</li>
+                            <li>Berlari menjauhi arah datangnya pergerakan tanah/tebing.</li>
+                        </ul>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #FFF7ED; color: #EA580C;"><i class='bx bx-directions'></i></div>
+                            <h4>Arah Penyelamatan</h4>
+                        </div>
+                        <ul>
+                            <li>Hindari menyeberangi lembah. Menghindarlah ke daerah tinggi atau lateral (menyamping) dari jalur longsor.</li>
+                            <li>Jauhi bantaran sungai karena longsoran sering berubah menjadi aliran puing.</li>
+                        </ul>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #F8FAFC; color: #64748B;"><i class='bx bx-shield-quarter'></i></div>
+                            <h4>Jika Terjebak</h4>
+                        </div>
+                        <ul>
+                            <li>Posisikan tubuh meringkuk seperti bola.</li>
+                            <li>Lindungi kepala dan leher menggunakan kedua tangan atau benda padat terdekat.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL EDUKASI 4: SESUDAH LONGSOR -->
+            <div class="side-panel" id="panel-sesudah">
+                <div class="panel-header">
+                    <h3>Sesudah Longsor</h3>
+                    <button class="panel-close"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="panel-body">
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #FEF2F2; color: #DC2626;"><i class='bx bx-radar'></i></div>
+                            <h4>Waspada Longsor Susulan</h4>
+                        </div>
+                        <ul>
+                            <li>Jangan segera kembali ke rumah atau mendekati area longsoran. Struktur tanah masih labil.</li>
+                        </ul>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #EFF6FF; color: #2563EB;"><i class='bx bx-phone-call'></i></div>
+                            <h4>Tindakan Darurat</h4>
+                        </div>
+                        <ul>
+                            <li>Hubungi posko darurat BNPB/BPBD atau instansi terkait via dashboard WARLO.</li>
+                            <li>Lakukan pelaporan korban jiwa/hilang di posko titik kumpul (Safe Zone).</li>
+                        </ul>
+                    </div>
+                    <div class="edu-card">
+                        <div class="edu-card-header">
+                            <div class="edu-card-icon" style="background: #FFF7ED; color: #EA580C;"><i class='bx bx-water'></i></div>
+                            <h4>Pemeriksaan Aliran Sungai</h4>
+                        </div>
+                        <ul>
+                            <li>Periksa apakah material longsoran membendung sungai (menjadi bendung alam). Jika iya, segera lapor ke pihak berwenang karena rawan memicu banjir bandang.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- /.map-wrap -->
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="assets/app.js"></script>
+</body>
+</html>

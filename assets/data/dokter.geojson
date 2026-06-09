@@ -1,0 +1,23 @@
+{
+"type": "FeatureCollection",
+"name": "dokter",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC::CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "fid": 1350.0, "osm_id": "2502365627", "code": 2120, "fclass": "doctors", "name": "Dr Edi" }, "geometry": { "type": "Point", "coordinates": [ 105.0947391, -4.6247306 ] } },
+{ "type": "Feature", "properties": { "fid": 1408.0, "osm_id": "2668835662", "code": 2120, "fclass": "doctors", "name": "Dr. Saroso R" }, "geometry": { "type": "Point", "coordinates": [ 105.3158213, -5.1142336 ] } },
+{ "type": "Feature", "properties": { "fid": 1411.0, "osm_id": "2672479614", "code": 2120, "fclass": "doctors", "name": "UGD 24 Jam" }, "geometry": { "type": "Point", "coordinates": [ 105.0805504, -4.6038963 ] } },
+{ "type": "Feature", "properties": { "fid": 10962.0, "osm_id": "9771108382", "code": 2120, "fclass": "doctors", "name": "dr. Irwan Widjaya" }, "geometry": { "type": "Point", "coordinates": [ 105.2716698, -5.4284933 ] } },
+{ "type": "Feature", "properties": { "fid": 11111.0, "osm_id": "9774009804", "code": 2120, "fclass": "doctors", "name": "dr. Firman" }, "geometry": { "type": "Point", "coordinates": [ 105.3102079, -5.117333 ] } },
+{ "type": "Feature", "properties": { "fid": 11569.0, "osm_id": "9776312703", "code": 2120, "fclass": "doctors", "name": "dr. Legowo" }, "geometry": { "type": "Point", "coordinates": [ 105.2471504, -5.416051 ] } },
+{ "type": "Feature", "properties": { "fid": 12121.0, "osm_id": "9778504207", "code": 2120, "fclass": "doctors", "name": "dr. Retno Ariza" }, "geometry": { "type": "Point", "coordinates": [ 105.0159017, -5.3831522 ] } },
+{ "type": "Feature", "properties": { "fid": 12181.0, "osm_id": "9778563688", "code": 2120, "fclass": "doctors", "name": "dr Erlin Fristantia" }, "geometry": { "type": "Point", "coordinates": [ 105.0417339, -5.3742837 ] } },
+{ "type": "Feature", "properties": { "fid": 12227.0, "osm_id": "9778593730", "code": 2120, "fclass": "doctors", "name": "dr. Budi Arianto, Sp.OG" }, "geometry": { "type": "Point", "coordinates": [ 105.0051621, -5.3623523 ] } },
+{ "type": "Feature", "properties": { "fid": 12255.0, "osm_id": "9778636929", "code": 2120, "fclass": "doctors", "name": "dr. Elvani" }, "geometry": { "type": "Point", "coordinates": [ 104.9783345, -5.3576902 ] } },
+{ "type": "Feature", "properties": { "fid": 12368.0, "osm_id": "9780467913", "code": 2120, "fclass": "doctors", "name": "dr. Tedy" }, "geometry": { "type": "Point", "coordinates": [ 104.9151321, -5.3654531 ] } },
+{ "type": "Feature", "properties": { "fid": 13395.0, "osm_id": "9787200468", "code": 2120, "fclass": "doctors", "name": "dr. Fetra" }, "geometry": { "type": "Point", "coordinates": [ 105.3168437, -5.1886514 ] } },
+{ "type": "Feature", "properties": { "fid": 13431.0, "osm_id": "9787280029", "code": 2120, "fclass": "doctors", "name": "dr. Iskandar Zulkarnaen" }, "geometry": { "type": "Point", "coordinates": [ 105.5909936, -5.7326608 ] } },
+{ "type": "Feature", "properties": { "fid": 13453.0, "osm_id": "9788507699", "code": 2120, "fclass": "doctors", "name": "dr. Robinson" }, "geometry": { "type": "Point", "coordinates": [ 105.2687474, -5.4105023 ] } },
+{ "type": "Feature", "properties": { "fid": 14541.0, "osm_id": "9794017057", "code": 2120, "fclass": "doctors", "name": "dr. Oktadoni" }, "geometry": { "type": "Point", "coordinates": [ 105.22705, -5.3732212 ] } },
+{ "type": "Feature", "properties": { "fid": 14842.0, "osm_id": "9795363497", "code": 2120, "fclass": "doctors", "name": "dr. Albert ST" }, "geometry": { "type": "Point", "coordinates": [ 105.2751936, -5.4184728 ] } }
+]
+}

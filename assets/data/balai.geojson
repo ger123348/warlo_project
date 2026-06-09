@@ -1,0 +1,15 @@
+{
+"type": "FeatureCollection",
+"name": "balai",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC::CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "fid": 1098.0, "osm_id": "2180835378", "code": 2008, "fclass": "town_hall", "name": "Balai Desa Pisang Indah" }, "geometry": { "type": "Point", "coordinates": [ 104.4571142, -4.3196521 ] } },
+{ "type": "Feature", "properties": { "fid": 6479.0, "osm_id": "5304523188", "code": 2008, "fclass": "town_hall", "name": "Balai Dea Karang Anyar" }, "geometry": { "type": "Point", "coordinates": [ 104.5365832, -5.5069614 ] } },
+{ "type": "Feature", "properties": { "fid": 7678.0, "osm_id": "6114945782", "code": 2008, "fclass": "town_hall", "name": "Balai Desa Fajar Baru" }, "geometry": { "type": "Point", "coordinates": [ 105.2848415, -3.9176534 ] } },
+{ "type": "Feature", "properties": { "fid": 9624.0, "osm_id": "7933022228", "code": 2008, "fclass": "town_hall", "name": "Balai Dusun RK 05" }, "geometry": { "type": "Point", "coordinates": [ 105.3044832, -3.9286312 ] } },
+{ "type": "Feature", "properties": { "fid": 16959.0, "osm_id": "11013267081", "code": 2008, "fclass": "town_hall", "name": "Balai Kampung Moris Jaya" }, "geometry": { "type": "Point", "coordinates": [ 105.2721782, -4.2858746 ] } },
+{ "type": "Feature", "properties": { "fid": 16960.0, "osm_id": "11013267087", "code": 2008, "fclass": "town_hall", "name": "Balai Kampung Tri Mukti Jaya" }, "geometry": { "type": "Point", "coordinates": [ 105.2836771, -4.2969676 ] } },
+{ "type": "Feature", "properties": { "fid": 18155.0, "osm_id": "12354938630", "code": 2008, "fclass": "town_hall", "name": "Kantor Kecamatan Labuhan Maringgai" }, "geometry": { "type": "Point", "coordinates": [ 105.8014769, -5.3456032 ] } },
+{ "type": "Feature", "properties": { "fid": 18726.0, "osm_id": "12871119472", "code": 2008, "fclass": "town_hall", "name": "Balai Kampung Tri Mulya Jaya" }, "geometry": { "type": "Point", "coordinates": [ 105.3046459, -4.3033222 ] } }
+]
+}
