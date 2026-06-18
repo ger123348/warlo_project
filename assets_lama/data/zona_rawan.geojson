@@ -1,0 +1,56 @@
+{
+  "type": "FeatureCollection",
+  "name": "zona_rawan",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC::CRS84" } },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": 1, "tingkat": "Tinggi", "deskripsi": "Zona Rawan Longsor Tinggi" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [104.45, -5.35],
+            [104.55, -5.35],
+            [104.52, -5.45],
+            [104.42, -5.42],
+            [104.45, -5.35]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 2, "tingkat": "Sedang", "deskripsi": "Zona Rawan Longsor Sedang" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [104.55, -5.35],
+            [104.65, -5.30],
+            [104.68, -5.40],
+            [104.52, -5.45],
+            [104.55, -5.35]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 3, "tingkat": "Rendah", "deskripsi": "Zona Rawan Longsor Rendah" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [104.42, -5.42],
+            [104.52, -5.45],
+            [104.68, -5.40],
+            [104.75, -5.50],
+            [104.40, -5.55],
+            [104.42, -5.42]
+          ]
+        ]
+      }
+    }
+  ]
+}

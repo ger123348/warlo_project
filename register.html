@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Daftar — WARLO</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="assets/css/glass.css">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    display:flex;align-items:center;justify-content:center;
+    min-height:100vh;padding:24px;overflow-x:hidden;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(116,198,157,.55) 0%, transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(27,67,50,.55) 0%, transparent 45%),
+      radial-gradient(circle at 20% 90%, rgba(64,145,108,.5) 0%, transparent 45%),
+      radial-gradient(circle at 90% 85%, rgba(149,213,178,.5) 0%, transparent 45%),
+      linear-gradient(150deg,#0f2a20 0%, #1b4332 45%, #2d6a4f 100%) !important;
+  }
+
+  .auth-wrap{
+    width:100%;max-width:920px;
+    display:grid;grid-template-columns:1.1fr 1fr;
+    border-radius:28px;overflow:hidden;
+    background: rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow: var(--glass-shadow-lg);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+  }
+
+  /* LEFT — brand / illustration side */
+  .auth-aside{
+    padding:48px 40px;color:#eafbf2;display:flex;flex-direction:column;
+    justify-content:space-between;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(116,198,157,.35), transparent 55%),
+      radial-gradient(circle at 80% 80%, rgba(27,67,50,.55), transparent 55%);
+    position:relative;
+  }
+  .auth-aside::after{
+    content:'';position:absolute;inset:0;
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 40%);
+    pointer-events:none;
+  }
+  .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:22px;letter-spacing:1px;}
+  .brand .mark{
+    width:42px;height:42px;border-radius:14px;
+    background:linear-gradient(135deg,var(--g-300),var(--g-500));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow: var(--glass-shadow), inset 0 1px 2px rgba(255,255,255,.5);
+    font-size:20px;
+  }
+  .aside-title{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;line-height:1.25;margin-top:32px;}
+  .aside-desc{font-size:.92rem;line-height:1.7;opacity:.8;margin-top:14px;max-width:380px;}
+  .aside-points{display:flex;flex-direction:column;gap:14px;margin-top:auto;padding-top:32px;}
+  .aside-points .pt{display:flex;align-items:center;gap:12px;font-size:.85rem;opacity:.85;}
+  .aside-points .pt .ic{
+    width:34px;height:34px;border-radius:10px;flex-shrink:0;
+    background: rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.15);
+    display:flex;align-items:center;justify-content:center;font-size:15px;
+    backdrop-filter: blur(8px);
+  }
+
+  /* RIGHT — form side */
+  .auth-form{
+    background: rgba(255,255,255,.55);
+    padding:44px 40px;display:flex;flex-direction:column;justify-content:center;
+    max-height:100vh;overflow-y:auto;
+  }
+  .auth-form h1{font-size:1.6rem;font-weight:800;color:var(--g-800);}
+  .auth-form .sub{font-size:.85rem;color:#557b6c;margin-top:6px;margin-bottom:24px;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:.78rem;font-weight:700;color:var(--g-800);margin-bottom:6px;letter-spacing:.2px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .input-wrap{position:relative;}
+  .input-wrap input, .input-wrap select{
+    width:100%;padding:13px 44px 13px 14px;font-size:.92rem;font-family:inherit;
+    background:rgba(255,255,255,.6);border:1px solid var(--glass-border);
+    border-radius:14px;color:var(--g-800);backdrop-filter:blur(8px);
+    transition:border-color .15s,box-shadow .15s;
+    appearance:none;-webkit-appearance:none;
+  }
+  .input-wrap input:focus, .input-wrap select:focus{
+    outline:none;border-color:var(--g-500);
+    box-shadow:0 0 0 3px rgba(64,145,108,.18);background:rgba(255,255,255,.85);
+  }
+  .input-wrap .ic{
+    position:absolute;right:14px;top:50%;transform:translateY(-50%);
+    color:#90ad9f;font-size:1rem;cursor:default;
+  }
+  .input-wrap .ic.toggle{cursor:pointer;}
+
+  .pw-hint{font-size:.72rem;color:#7c9c8d;margin-top:6px;line-height:1.5;}
+
+  .terms{display:flex;align-items:flex-start;gap:8px;font-size:.8rem;color:#557b6c;margin:14px 0 22px;}
+  .terms input{accent-color:var(--g-500);width:16px;height:16px;cursor:pointer;margin-top:2px;flex-shrink:0;}
+  .terms a{color:var(--g-700);font-weight:600;text-decoration:none;}
+  .terms a:hover{text-decoration:underline;}
+
+  .btn-submit{
+    width:100%;padding:14px;border:none;border-radius:14px;cursor:pointer;
+    font-family:inherit;font-size:.95rem;font-weight:700;color:#fff;letter-spacing:.3px;
+    background:linear-gradient(135deg,var(--g-300),var(--g-700));
+    box-shadow:0 10px 26px -8px rgba(45,106,79,.55), inset 0 1px 1px rgba(255,255,255,.35);
+    transition:transform .15s ease, box-shadow .15s ease;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .btn-submit:hover{transform:translateY(-1px);box-shadow:0 14px 32px -8px rgba(45,106,79,.6), inset 0 1px 1px rgba(255,255,255,.35);}
+  .btn-submit:disabled{opacity:.65;cursor:not-allowed;transform:none;}
+
+  .switch-auth{text-align:center;margin-top:20px;font-size:.85rem;color:#557b6c;}
+  .switch-auth a{color:var(--g-700);font-weight:700;text-decoration:none;}
+  .switch-auth a:hover{text-decoration:underline;}
+
+  .alert-msg{
+    display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:12px;
+    font-size:.8rem;line-height:1.5;margin-bottom:18px;border:1px solid transparent;
+  }
+  .alert-msg.error{background:rgba(254,226,226,.7);color:#b91c1c;border-color:rgba(248,113,113,.35);}
+  .alert-msg.success{background:rgba(220,252,231,.7);color:#15803d;border-color:rgba(74,222,128,.35);}
+  .alert-msg.hidden{display:none;}
+
+  .api-hint{margin-top:18px;font-size:.72rem;color:#7c9c8d;text-align:center;line-height:1.6;}
+
+  @media (max-width:760px){
+    .auth-wrap{grid-template-columns:1fr;max-width:440px;}
+    .auth-aside{display:none;}
+    .auth-form{padding:36px 26px;max-height:none;}
+    .field-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-wrap">
+
+  <!-- ASIDE -->
+  <div class="auth-aside">
+    <div class="brand"><span class="mark"><i class="bi bi-tree-fill"></i></span> WARLO</div>
+    <div>
+      <div class="aside-title">Buat akun, mulai pantau wilayahmu hari ini.</div>
+      <div class="aside-desc">Daftar gratis untuk mendapatkan notifikasi peringatan dini, memantau kerabat, serta mengakses peta zona rawan longsor di sekitar tempat tinggalmu.</div>
+    </div>
+    <div class="aside-points">
+      <div class="pt"><span class="ic"><i class="bi bi-bell-fill"></i></span> Notifikasi peringatan dini</div>
+      <div class="pt"><span class="ic"><i class="bi bi-shield-check"></i></span> Data aman &amp; tersimpan di PostgreSQL</div>
+      <div class="pt"><span class="ic"><i class="bi bi-mortarboard-fill"></i></span> Edukasi kesiapsiagaan bencana</div>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="auth-form">
+    <h1>Buat Akun Baru</h1>
+    <p class="sub">Isi data berikut untuk mendaftar di WARLO.</p>
+
+    <div class="alert-msg hidden" id="msg"></div>
+
+    <form id="form-register" autocomplete="on">
+      <div class="field">
+        <label for="nama">Nama Lengkap</label>
+        <div class="input-wrap">
+          <input type="text" id="nama" name="nama" placeholder="Nama Anda" required minlength="3">
+          <span class="ic"><i class="bi bi-person-fill"></i></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <div class="input-wrap">
+          <input type="email" id="email" name="email" placeholder="nama@email.com" required>
+          <span class="ic"><i class="bi bi-envelope-fill"></i></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="telepon">Nomor HP (opsional)</label>
+        <div class="input-wrap">
+          <input type="tel" id="telepon" name="telepon" placeholder="08xxxxxxxxxx">
+          <span class="ic"><i class="bi bi-telephone-fill"></i></span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="password">Kata Sandi</label>
+          <div class="input-wrap">
+            <input type="password" id="password" name="password" placeholder="••••••••" required minlength="6">
+            <span class="ic toggle" id="toggle-pw"><i class="bi bi-eye-fill"></i></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="konfirmasi">Konfirmasi Sandi</label>
+          <div class="input-wrap">
+            <input type="password" id="konfirmasi" name="konfirmasi" placeholder="••••••••" required minlength="6">
+            <span class="ic toggle" id="toggle-pw2"><i class="bi bi-eye-fill"></i></span>
+          </div>
+        </div>
+      </div>
+      <div class="pw-hint"><i class="bi bi-info-circle"></i> Minimal 6 karakter.</div>
+
+      <label class="terms" style="margin-top:16px;">
+        <input type="checkbox" id="setuju" required>
+        <span>Saya menyetujui <a href="#">Syarat &amp; Ketentuan</a> serta <a href="#">Kebijakan Privasi</a> WARLO.</span>
+      </label>
+
+      <button type="submit" class="btn-submit" id="btn-submit">
+        <span id="btn-text">Daftar Sekarang</span>
+        <i class="bi bi-person-plus-fill" id="btn-icon"></i>
+      </button>
+    </form>
+
+    <div class="switch-auth">Sudah punya akun? <a href="login.html">Masuk di sini</a></div>
+    <div class="api-hint"><i class="bi bi-hdd-network"></i> Terhubung ke API <code>http://localhost:3000</code> &mdash; lihat README untuk setup database PostgreSQL.</div>
+  </div>
+
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:3000';
+
+  function togglePw(inputId, iconId){
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    icon.innerHTML = showing ? '<i class="bi bi-eye-fill"></i>' : '<i class="bi bi-eye-slash-fill"></i>';
+  }
+  document.getElementById('toggle-pw').addEventListener('click', ()=>togglePw('password','toggle-pw'));
+  document.getElementById('toggle-pw2').addEventListener('click', ()=>togglePw('konfirmasi','toggle-pw2'));
+
+  function showMsg(text, type){
+    const el = document.getElementById('msg');
+    el.className = 'alert-msg ' + type;
+    el.innerHTML = (type === 'error'
+        ? '<i class="bi bi-exclamation-triangle-fill"></i> '
+        : '<i class="bi bi-check-circle-fill"></i> ') + text;
+  }
+
+  document.getElementById('form-register').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const nama = document.getElementById('nama').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const telepon = document.getElementById('telepon').value.trim();
+    const password = document.getElementById('password').value;
+    const konfirmasi = document.getElementById('konfirmasi').value;
+
+    if(password !== konfirmasi){
+      showMsg('Konfirmasi kata sandi tidak cocok.', 'error');
+      return;
+    }
+    if(password.length < 6){
+      showMsg('Kata sandi minimal 6 karakter.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-submit');
+    const btnText = document.getElementById('btn-text');
+    const btnIcon = document.getElementById('btn-icon');
+    btn.disabled = true;
+    btnText.textContent = 'Memproses...';
+    btnIcon.className = 'bi bi-arrow-repeat';
+
+    fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ nama, email, telepon, password })
+    })
+    .then(async res => {
+      const data = await res.json().catch(()=>({}));
+      if(!res.ok) throw new Error(data.message || 'Pendaftaran gagal. Coba lagi.');
+      return data;
+    })
+    .then(data => {
+      showMsg('Pendaftaran berhasil! Mengalihkan ke halaman masuk...', 'success');
+      setTimeout(() => { window.location.href = 'login.html'; }, 900);
+    })
+    .catch(err => {
+      showMsg(err.message || 'Tidak dapat terhubung ke server. Pastikan backend & PostgreSQL aktif di port 3000.', 'error');
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btnText.textContent = 'Daftar Sekarang';
+      btnIcon.className = 'bi bi-person-plus-fill';
+    });
+  });
+</script>
+</body>
+</html>

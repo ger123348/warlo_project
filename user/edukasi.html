@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Edukasi Longsor — WARLO</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <style>
+    :root {
+      --cream: #F4EDDD;
+      --olive: #344128;
+      --olive-light: #4A5A3A;
+      --olive-dark: #1E2A16;
+      --brown: #6A513F;
+      --terracotta: #B56B46;
+      --gold: #C4A96A;
+      --gold-light: #D9C08A;
+      --text-light: #F4EDDD;
+      --text-dark: #1E2A16;
+      --border: rgba(52,65,40,0.12);
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--olive);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection { background: var(--olive); color: var(--cream); }
+
+    /* ===== SIDEBAR ===== */
+    #sidebar {
+      width: 72px;
+      background: var(--olive-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 0;
+      flex-shrink: 0;
+      z-index: 500;
+      box-shadow: 2px 0 20px rgba(0,0,0,0.25);
+    }
+    .sb-logo {
+      width: 44px; height: 44px;
+      background: var(--gold);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700; font-size: 18px;
+      color: var(--olive-dark);
+      text-decoration: none;
+      margin-bottom: 28px;
+      letter-spacing: 0.05em;
+    }
+    .sb-menu { display:flex; flex-direction:column; gap:4px; flex:1; width:100%; padding:0 10px; }
+    .sb-item {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; padding: 10px 6px; border-radius: 8px;
+      text-decoration: none; color: rgba(244,237,221,0.4);
+      font-size: 9px; font-weight: 500; text-align: center;
+      transition: background .2s, color .2s;
+      letter-spacing: 0.05em;
+    }
+    .sb-item .sb-icon { font-size: 18px; }
+    .sb-item:hover { background: rgba(244,237,221,0.08); color: rgba(244,237,221,0.8); }
+    .sb-item.active { background: rgba(196,169,106,0.2); color: var(--gold); }
+    .sb-bottom { display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 10px; width:100%; }
+    .sb-darurat {
+      width: 44px; height: 44px; background: #b91c1c;
+      border: none; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: #fff; cursor: pointer;
+      animation: dpulse 2.5s infinite;
+    }
+    @keyframes dpulse {
+      0%,90%,100%{box-shadow:0 0 0 0 rgba(185,28,28,.45);}
+      45%{box-shadow:0 0 0 8px rgba(185,28,28,0);}
+    }
+    .sb-home {
+      width: 44px; height: 44px;
+      background: rgba(244,237,221,0.07);
+      border: none; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; text-decoration: none; color: rgba(244,237,221,0.4);
+      transition: color .2s, background .2s;
+    }
+    .sb-home:hover { color: rgba(244,237,221,0.8); background: rgba(244,237,221,0.1); }
+
+    /* ===== APP AREA ===== */
+    #app { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
+
+    /* ===== TOPBAR ===== */
+    #topbar {
+      position: sticky; top: 0; z-index: 100;
+      height: 56px;
+      background: var(--cream);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 28px;
+      flex-shrink: 0;
+    }
+    #topbar h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px; font-weight: 500;
+      color: var(--olive-dark);
+      letter-spacing: 0.03em;
+    }
+    #topbar .topbar-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 9px; font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-left: auto;
+    }
+
+    /* ===== TOPIK NAV ===== */
+    .topik-nav {
+      display: flex; gap: 8px;
+      padding: 14px 28px;
+      overflow-x: auto;
+      background: var(--cream);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      position: sticky; top: 56px; z-index: 99;
+    }
+    .topik-nav::-webkit-scrollbar { height: 0; }
+    .topik-btn {
+      padding: 7px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      font-size: 11px; font-weight: 500;
+      cursor: pointer; white-space: nowrap;
+      transition: all .2s;
+      color: var(--olive-light);
+      letter-spacing: 0.05em;
+      font-family: 'Inter', sans-serif;
+    }
+    .topik-btn:hover { background: rgba(52,65,40,0.06); border-color: rgba(52,65,40,0.25); }
+    .topik-btn.active {
+      background: var(--olive-dark);
+      color: var(--gold);
+      border-color: var(--olive-dark);
+    }
+
+    /* ===== KONTEN ===== */
+    .konten { padding: 32px 28px; max-width: 820px; width: 100%; margin: 0 auto; }
+
+    .topik-section { display: none; }
+    .topik-section.active { display: block; }
+
+    /* ===== HERO TOPIK ===== */
+    .hero-topik {
+      background: var(--olive-dark);
+      border-radius: 16px;
+      padding: 36px 32px;
+      color: var(--cream);
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-topik::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(196,169,106,0.07);
+    }
+    .hero-topik::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: 20%;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: rgba(196,169,106,0.04);
+    }
+    .hero-topik .eyebrow {
+      font-size: 9px; letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .hero-topik h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px; font-weight: 400;
+      margin-bottom: 10px; line-height: 1.15;
+      color: var(--cream);
+    }
+    .hero-topik p { font-size: 13px; opacity: .75; line-height: 1.7; max-width: 560px; }
+
+    /* ===== CARD GRID ===== */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 14px; margin-bottom: 24px; }
+
+    /* ===== INFO CARD ===== */
+    .info-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 22px 20px;
+      border: 1px solid var(--border);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .info-card:hover { box-shadow: 0 8px 32px rgba(52,65,40,0.09); transform: translateY(-2px); }
+    .info-card .card-icon { font-size: 26px; margin-bottom: 12px; color: var(--gold); }
+    .info-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px; font-weight: 600;
+      color: var(--olive-dark); margin-bottom: 8px;
+    }
+    .info-card p, .info-card li { font-size: 12px; line-height: 1.75; color: var(--brown); }
+    .info-card ul { padding-left: 16px; }
+    .info-card li { margin-bottom: 4px; }
+
+    /* ===== WARNING CARD ===== */
+    .warning-card {
+      background: #fdf6ef;
+      border: 1px solid rgba(181,107,70,0.3);
+      border-left: 3px solid var(--terracotta);
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-bottom: 16px;
+    }
+    .warning-card h3 { font-size: 13px; font-weight: 700; color: var(--terracotta); margin-bottom: 8px; }
+    .warning-card p, .warning-card li { font-size: 12px; color: var(--brown); line-height: 1.75; }
+    .warning-card ul { padding-left: 16px; }
+
+    /* ===== SUCCESS CARD ===== */
+    .success-card {
+      background: rgba(52,65,40,0.04);
+      border: 1px solid rgba(52,65,40,0.12);
+      border-left: 3px solid var(--olive);
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-bottom: 16px;
+    }
+    .success-card h3 { font-size: 13px; font-weight: 700; color: var(--olive); margin-bottom: 8px; }
+    .success-card p, .success-card li { font-size: 12px; color: var(--brown); line-height: 1.75; }
+    .success-card ul { padding-left: 16px; }
+
+    /* ===== STEP LIST ===== */
+    .step-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .step-item {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: #fff;
+      border-radius: 14px; padding: 18px 20px;
+      border: 1px solid var(--border);
+      transition: box-shadow .2s;
+    }
+    .step-item:hover { box-shadow: 0 4px 20px rgba(52,65,40,0.08); }
+    .step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--olive-dark);
+      color: var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px;
+      flex-shrink: 0;
+      font-family: 'Cormorant Garamond', serif;
+    }
+    .step-content h4 {
+      font-size: 13px; font-weight: 600;
+      color: var(--olive-dark); margin-bottom: 4px;
+    }
+    .step-content p { font-size: 12px; color: var(--brown); line-height: 1.65; }
+
+    /* ===== FAKTA STRIP ===== */
+    .fakta-strip { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .fakta-item {
+      flex: 1; min-width: 120px;
+      background: var(--olive-dark);
+      color: var(--cream);
+      border-radius: 14px; padding: 20px 16px;
+      text-align: center;
+    }
+    .fakta-item .fnum {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 30px; font-weight: 400;
+      color: var(--gold);
+    }
+    .fakta-item .fdesc {
+      font-size: 9px; opacity: .6;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      margin-top: 4px;
+    }
+
+    /* ===== DIVIDER ===== */
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 24px 0;
+    }
+
+    /* ===== MODAL DARURAT ===== */
+    #modal-darurat {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(30,42,22,0.7);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    #modal-darurat.open { display: flex; }
+    .modal-box {
+      background: var(--cream);
+      border-radius: 20px; padding: 36px 32px;
+      width: 360px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.3);
+    }
+    .modal-box h2 {
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--terracotta); font-size: 22px; font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .modal-box p { font-size: 12px; color: var(--brown); margin-bottom: 22px; }
+    .darurat-list { display: flex; flex-direction: column; gap: 8px; }
+    .darurat-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 16px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px; text-decoration: none;
+      color: var(--olive-dark); font-size: 13px; font-weight: 500;
+      transition: background .15s, border-color .15s;
+    }
+    .darurat-item:hover { background: rgba(181,107,70,0.07); border-color: rgba(181,107,70,0.3); }
+    .darurat-item .d-icon { font-size: 20px; color: var(--gold); }
+    .darurat-item .d-num { font-size: 11px; color: var(--brown); opacity: .7; margin-top: 1px; }
+    .modal-close {
+      width: 100%; margin-top: 16px; padding: 11px;
+      background: none; border: 1px solid var(--border);
+      border-radius: 10px; cursor: pointer;
+      font-size: 12px; color: var(--brown);
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.08em;
+      transition: background .15s;
+    }
+    .modal-close:hover { background: rgba(52,65,40,0.06); }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <a href="../index.html" class="sb-logo">W</a>
+  <nav class="sb-menu">
+    <a href="peta.html" class="sb-item">
+      <span class="sb-icon"><i class="bi bi-map-fill"></i></span><span>Peta</span>
+    </a>
+    <a href="saudara.html" class="sb-item">
+      <span class="sb-icon"><i class="bi bi-people-fill"></i></span><span>Saudara</span>
+    </a>
+    <a href="edukasi.html" class="sb-item active">
+      <span class="sb-icon"><i class="bi bi-book-fill"></i></span><span>Edukasi</span>
+    </a>
+  </nav>
+  <div class="sb-bottom">
+    <button class="sb-darurat" onclick="toggleDarurat()">
+      <i class="bi bi-exclamation-octagon-fill"></i>
+    </button>
+    <a href="../index.html" class="sb-home"><i class="bi bi-house-fill"></i></a>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div id="topbar">
+    <h1><i class="bi bi-book-fill" style="color:var(--gold);margin-right:10px;font-size:16px;"></i>Edukasi Longsor</h1>
+    <span class="topbar-sub">Kenali · Siap · Selamat</span>
+  </div>
+
+  <div class="topik-nav">
+    <button class="topik-btn active" onclick="ganti('apa',this)"><i class="bi bi-triangle-fill"></i> Apa itu Longsor?</button>
+    <button class="topik-btn" onclick="ganti('ciri',this)"><i class="bi bi-eye-fill"></i> Ciri-Ciri Longsor</button>
+    <button class="topik-btn" onclick="ganti('sebelum',this)"><i class="bi bi-clipboard-fill"></i> Sebelum Longsor</button>
+    <button class="topik-btn" onclick="ganti('saat',this)"><i class="bi bi-lightning-charge-fill"></i> Saat Longsor</button>
+    <button class="topik-btn" onclick="ganti('sesudah',this)"><i class="bi bi-bandaid-fill"></i> Sesudah Longsor</button>
+    <button class="topik-btn" onclick="ganti('p3k',this)"><i class="bi bi-heart-pulse-fill"></i> Pertolongan Pertama</button>
+  </div>
+
+  <div class="konten">
+
+    <!-- APA ITU LONGSOR -->
+    <div id="topik-apa" class="topik-section active">
+      <div class="hero-topik">
+        <div class="eyebrow">Edukasi Dasar</div>
+        <h2>Apa itu Tanah Longsor?</h2>
+        <p>Tanah longsor adalah gerakan massa tanah, batuan, atau material lainnya menuruni lereng akibat gaya gravitasi yang dipicu oleh berbagai faktor alam maupun manusia.</p>
+      </div>
+      <div class="fakta-strip">
+        <div class="fakta-item"><div class="fnum">40+</div><div class="fdesc">Kab/Kota rawan di Sumatera</div></div>
+        <div class="fakta-item"><div class="fnum">Nov–Apr</div><div class="fdesc">Musim risiko tertinggi</div></div>
+        <div class="fakta-item"><div class="fnum">70%</div><div class="fdesc">Dipicu curah hujan tinggi</div></div>
+      </div>
+      <div class="card-grid">
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-triangle-fill"></i></div>
+          <h3>Faktor Alam</h3>
+          <ul>
+            <li>Curah hujan tinggi dan terus-menerus</li>
+            <li>Kemiringan lereng curam (&gt;30°)</li>
+            <li>Jenis tanah lempung atau pasir</li>
+            <li>Gempa bumi yang menggetarkan lereng</li>
+            <li>Erosi oleh aliran sungai</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-cone-striped"></i></div>
+          <h3>Faktor Manusia</h3>
+          <ul>
+            <li>Deforestasi (penebangan hutan)</li>
+            <li>Pertanian di lereng tanpa terasering</li>
+            <li>Pembangunan di tepi jurang</li>
+            <li>Penggalian/penambangan tanpa kendali</li>
+            <li>Drainase yang tidak memadai</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-bar-chart-fill"></i></div>
+          <h3>Jenis Longsor</h3>
+          <ul>
+            <li><b>Longsoran translasi</b> — blok tanah bergerak sejajar lereng</li>
+            <li><b>Longsoran rotasi</b> — massa berputar mengikuti bidang cekung</li>
+            <li><b>Aliran debris</b> — campuran tanah dan air mengalir cepat</li>
+            <li><b>Runtuhan batu</b> — bongkahan batuan jatuh bebas</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- CIRI-CIRI -->
+    <div id="topik-ciri" class="topik-section">
+      <div class="hero-topik">
+        <div class="eyebrow">Tanda Bahaya</div>
+        <h2>Kenali Ciri-Ciri Longsor</h2>
+        <p>Alam memberi tanda sebelum longsor terjadi. Kenali tanda-tanda ini agar kamu punya waktu untuk menyelamatkan diri.</p>
+      </div>
+      <div class="warning-card">
+        <h3><i class="bi bi-broadcast"></i> Tanda Darurat — Segera Evakuasi!</h3>
+        <ul>
+          <li>Tanah bergetar atau terdengar suara gemuruh dari atas bukit</li>
+          <li>Air sungai tiba-tiba keruh atau debitnya meningkat drastis</li>
+          <li>Pohon-pohon di lereng miring atau roboh sendiri</li>
+          <li>Retakan panjang muncul di tanah atau jalan</li>
+          <li>Bau tanah basah yang menyengat tiba-tiba</li>
+        </ul>
+      </div>
+      <div class="card-grid">
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-cloud-rain-fill"></i></div>
+          <h3>Tanda Cuaca</h3>
+          <ul>
+            <li>Hujan lebat &gt; 2 jam tanpa henti</li>
+            <li>Hujan terus-menerus selama beberapa hari</li>
+            <li>Curah hujan &gt; 70 mm/hari</li>
+            <li>Langit mendung gelap disertai angin kencang</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-globe-asia-australia"></i></div>
+          <h3>Tanda pada Tanah</h3>
+          <ul>
+            <li>Muncul mata air baru di tengah lereng</li>
+            <li>Tanah di halaman terasa lunak atau ambles</li>
+            <li>Pagar, tiang, atau dinding miring tiba-tiba</li>
+            <li>Air keluar dari celah-celah tanah</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-house-fill"></i></div>
+          <h3>Tanda pada Bangunan</h3>
+          <ul>
+            <li>Pintu atau jendela susah dibuka/ditutup tiba-tiba</li>
+            <li>Retak-retak baru di dinding atau lantai</li>
+            <li>Fondasi rumah terasa bergerak</li>
+            <li>Atap atau langit-langit berderit tidak biasa</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEBELUM LONGSOR -->
+    <div id="topik-sebelum" class="topik-section">
+      <div class="hero-topik">
+        <div class="eyebrow">Kesiapsiagaan</div>
+        <h2>Persiapan Sebelum Longsor</h2>
+        <p>Kesiapsiagaan adalah kunci. Persiapkan dirimu dan keluargamu jauh sebelum bencana datang.</p>
+      </div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-content"><h4>Kenali wilayahmu</h4><p>Periksa apakah rumahmu berada di zona rawan longsor menggunakan peta WARLO. Ketahui jarak ke lereng, sungai, atau bukit di sekitarmu.</p></div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-content"><h4>Siapkan Tas Siaga Bencana</h4><p>Isi dengan: KTP, dokumen penting (dalam plastik kedap air), uang tunai, senter + baterai cadangan, obat-obatan kebutuhan khusus, pakaian ganti 2 hari, air minum 2 liter, makanan kering tahan lama, dan peluit darurat.</p></div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-content"><h4>Tentukan titik kumpul keluarga</h4><p>Sepakati satu tempat berkumpul jika harus berpencar saat evakuasi. Pilih tempat yang tinggi, jauh dari lereng, dan mudah dijangkau semua anggota keluarga.</p></div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-content"><h4>Tambahkan saudara di WARLO</h4><p>Gunakan fitur Monitor Saudara untuk memantau kondisi anggota keluarga yang tinggal di wilayah berbeda. Bagikan link lokasimu ke mereka.</p></div></div>
+        <div class="step-item"><div class="step-num">5</div><div class="step-content"><h4>Ikuti latihan evakuasi</h4><p>Pelajari jalur evakuasi dari rumahmu ke titik aman terdekat. Lakukan simulasi bersama keluarga agar semua orang tahu apa yang harus dilakukan.</p></div></div>
+      </div>
+    </div>
+
+    <!-- SAAT LONGSOR -->
+    <div id="topik-saat" class="topik-section">
+      <div class="hero-topik" style="background:linear-gradient(135deg,#3d1515,#7f2020);">
+        <div class="eyebrow">Respons Darurat</div>
+        <h2>Yang Harus Dilakukan Saat Longsor</h2>
+        <p>Detik-detik pertama sangat menentukan. Tetap tenang dan ikuti langkah-langkah berikut.</p>
+      </div>
+      <div class="warning-card">
+        <h3><i class="bi bi-slash-circle-fill"></i> JANGAN LAKUKAN INI saat longsor!</h3>
+        <ul>
+          <li>Jangan panik dan berlari tanpa arah — pilih jalur evakuasi yang sudah direncanakan</li>
+          <li>Jangan kembali ke rumah untuk mengambil barang saat longsor sedang bergerak</li>
+          <li>Jangan berteduh di bawah pohon besar atau di tepi tebing</li>
+          <li>Jangan menyeberangi sungai yang debitnya naik tiba-tiba</li>
+          <li>Jangan memublikasikan hoaks kondisi bencana yang bisa menghambat evakuasi</li>
+        </ul>
+      </div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-content"><h4>Langsung evakuasi ke tempat tinggi</h4><p>Jika kamu di dalam atau dekat jalur longsor, segera bergerak ke tempat tinggi, jauh dari lereng. Jangan menunggu.</p></div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-content"><h4>Lindungi kepala dan tubuh</h4><p>Jika terjebak, berlindunglah di bawah meja atau benda kokoh. Lindungi kepala dengan tangan atau bantal. Waspadai batu dan pohon yang berjatuhan.</p></div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-content"><h4>Hubungi bantuan darurat</h4><p>Tekan tombol darurat di WARLO atau hubungi: BPBD 0721-773578 · BNPB 117 · Ambulans 119 · Basarnas 115.</p></div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-content"><h4>Informasikan ke keluarga</h4><p>Kirim pesan singkat ke keluarga tentang kondisi dan lokasimu. Gunakan fitur Bagikan Lokasi di WARLO untuk memudahkan proses pencarian.</p></div></div>
+      </div>
+    </div>
+
+    <!-- SESUDAH LONGSOR -->
+    <div id="topik-sesudah" class="topik-section">
+      <div class="hero-topik">
+        <div class="eyebrow">Pasca Bencana</div>
+        <h2>Tindakan Setelah Longsor</h2>
+        <p>Bahaya belum berakhir setelah longsor berhenti. Tetap waspada dan ikuti prosedur pemulihan yang aman.</p>
+      </div>
+      <div class="warning-card">
+        <h3><i class="bi bi-exclamation-triangle-fill"></i> Waspadai Longsor Susulan!</h3>
+        <p>Setelah longsor pertama, tanah masih dalam kondisi tidak stabil. Longsor susulan bisa terjadi kapan saja terutama jika hujan masih berlangsung. Jangan kembali ke lokasi longsor sebelum dinyatakan aman oleh pihak berwenang.</p>
+      </div>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-content"><h4>Tetap di tempat aman</h4><p>Tunggu pengumuman resmi dari BPBD bahwa lokasi sudah aman sebelum kembali. Jangan percaya kabar dari pihak yang tidak resmi.</p></div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-content"><h4>Periksa kondisi fisik dan psikis</h4><p>Pastikan tidak ada anggota keluarga yang terluka. Tangani trauma psikologis — panik atau shock setelah bencana adalah hal wajar dan perlu mendapat perhatian.</p></div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-content"><h4>Laporkan ke BPBD</h4><p>Laporkan kerusakan, korban, dan kondisi terkini ke BPBD setempat agar bantuan bisa segera dikirimkan ke wilayahmu.</p></div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-content"><h4>Hindari air tercemar</h4><p>Setelah longsor, sumber air seperti sumur dan sungai bisa tercemar lumpur dan bakteri berbahaya. Gunakan air kemasan atau air yang sudah dimasak hingga mendidih.</p></div></div>
+      </div>
+      <div class="success-card">
+        <h3><i class="bi bi-check-circle-fill"></i> Bantuan yang Bisa Didapat</h3>
+        <ul>
+          <li>Pengungsian sementara di posko BPBD</li>
+          <li>Bantuan pangan dan sandang dari PMI</li>
+          <li>Layanan kesehatan gratis dari Dinkes</li>
+          <li>Bantuan trauma healing dari Kemensos</li>
+          <li>Rekonstruksi rumah melalui program pemerintah</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- PERTOLONGAN PERTAMA -->
+    <div id="topik-p3k" class="topik-section">
+      <div class="hero-topik">
+        <div class="eyebrow">Medis Darurat</div>
+        <h2>Pertolongan Pertama Korban Longsor</h2>
+        <p>Beberapa tindakan pertolongan pertama yang benar bisa menyelamatkan nyawa sebelum bantuan medis tiba.</p>
+      </div>
+      <div class="card-grid">
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+          <h3>Tertimbun Tanah</h3>
+          <ul>
+            <li>Pastikan korban bisa bernapas — bersihkan tanah dari mulut dan hidung</li>
+            <li>Jangan tarik korban paksa jika terhimpit benda berat</li>
+            <li>Stabilkan kepala dan leher korban agar tidak bergerak</li>
+            <li>Panggil bantuan segera — hubungi 119</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-droplet-fill" style="color:var(--terracotta)"></i></div>
+          <h3>Luka Terbuka</h3>
+          <ul>
+            <li>Tekan luka dengan kain bersih atau perban selama 10–15 menit</li>
+            <li>Jangan mencabut benda yang menancap di luka</li>
+            <li>Angkat bagian tubuh yang terluka lebih tinggi dari jantung</li>
+            <li>Bawa ke fasilitas kesehatan terdekat segera</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-circle-fill"></i></div>
+          <h3>Patah Tulang</h3>
+          <ul>
+            <li>Jangan memindahkan korban jika diduga patah tulang belakang</li>
+            <li>Bidai menggunakan papan atau ranting lurus</li>
+            <li>Ikat bidai di atas dan bawah tulang yang patah</li>
+            <li>Jaga korban tetap hangat dan tenang</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-droplet-fill"></i></div>
+          <h3>Hipotermia (Kedinginan)</h3>
+          <ul>
+            <li>Pindahkan korban dari tempat basah dan dingin</li>
+            <li>Selimuti dengan kain kering, termasuk kepala</li>
+            <li>Berikan minuman hangat manis jika korban sadar</li>
+            <li>Jangan gosok tubuh korban — bisa merusak jaringan</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-wind"></i></div>
+          <h3>Tidak Sadar / Henti Nafas</h3>
+          <ul>
+            <li>Periksa respons: panggil nama, tepuk bahu</li>
+            <li>Jika tidak bernapas: lakukan CPR (30 tekanan dada + 2 napas bantuan)</li>
+            <li>Tekanan dada 5–6 cm, ritme 100–120 per menit</li>
+            <li>Lanjutkan hingga bantuan medis tiba</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><i class="bi bi-emoji-frown"></i></div>
+          <h3>Trauma Psikologis</h3>
+          <ul>
+            <li>Tenangkan korban dengan suara pelan dan menenangkan</li>
+            <li>Jangan tinggalkan korban sendirian</li>
+            <li>Jauhkan dari area bencana jika memungkinkan</li>
+            <li>Hubungi layanan konseling trauma: 119 ext 8</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /konten -->
+</div>
+
+<!-- MODAL DARURAT -->
+<div id="modal-darurat">
+  <div class="modal-box">
+    <h2><i class="bi bi-exclamation-octagon-fill" style="color:var(--terracotta);margin-right:8px;"></i>Hubungi Bantuan Darurat</h2>
+    <p>Pilih instansi yang ingin dihubungi.</p>
+    <div class="darurat-list">
+      <a href="tel:117" class="darurat-item"><span class="d-icon"><i class="bi bi-bank2"></i></span><div><div>BNPB Nasional</div><div class="d-num">117</div></div></a>
+      <a href="tel:07217773578" class="darurat-item"><span class="d-icon"><i class="bi bi-house-fill"></i></span><div><div>BPBD Lampung</div><div class="d-num">0721-773578</div></div></a>
+      <a href="tel:119" class="darurat-item"><span class="d-icon"><i class="bi bi-truck-front-fill"></i></span><div><div>Ambulans</div><div class="d-num">119</div></div></a>
+      <a href="tel:115" class="darurat-item"><span class="d-icon"><i class="bi bi-shield-fill-check"></i></span><div><div>Basarnas</div><div class="d-num">115</div></div></a>
+    </div>
+    <button class="modal-close" onclick="toggleDarurat()">Tutup</button>
+  </div>
+</div>
+
+<script>
+function ganti(id, btn){
+  document.querySelectorAll('.topik-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.topik-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('topik-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleDarurat(){document.getElementById('modal-darurat').classList.toggle('open');}
+</script>
+</body>
+</html>

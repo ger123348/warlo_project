@@ -5,116 +5,75 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = 3000;
 
-// Mengaktifkan fitur keamanan CORS agar frontend (browser) bisa membaca data dari backend ini
 app.use(cors());
 app.use(express.json());
 
-// Menyajikan file statis (index.html, assets/, dll)
-app.use(express.static(__dirname));
-
-// ==========================================
-// 1. CONFIG KONEKSI KE DATABASE POSTGRESQL LU
-// ==========================================
 const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
     database: 'warlo_db',
-    password: 'janganlupa', // ⚠️ GANTI INI DENGAN PASSWORD MASTER PGADMIN LU!
+    password: 'janganlupa',
     port: 5432,
 });
 
-// Tes koneksi database saat server pertama kali dinyalakan
-pool.connect((err, client, release) => {
-    if (err) {
-        return console.error('❌ Waduh, gagal nyambung ke database PostGIS lu, kuncinya salah kali:', err.stack);
-    }
-    console.log('✅ Mantap! Jembatan ke database warlo_db sukses terhubung!');
-    release();
-});
-
-
-// ==========================================
-// 2. ENDPOINT USER: Mengambil 4 Titik Lampung (GeoJSON)
-// ==========================================
-// API ini yang bakal ditembak oleh Leaflet.js untuk memunculkan pin spasial otomatis di peta
-app.get('/api/peta', async (req, res) => {
+app.get('/api/simulasi', async (req, res) => {
     try {
-        const queryText = `
-            SELECT jsonb_build_object(
-                'type', 'FeatureCollection',
-                'features', jsonb_agg(features.feature)
-            ) FROM (
-                SELECT jsonb_build_object(
-                    'type', 'Feature',
-                    'geometry', ST_AsGeoJSON(geom)::jsonb,
-                    'properties', jsonb_build_object(
-                        'id', id,
-                        'nama', nama_lokasi,
-                        'kabupaten', kabupaten_kota,
-                        'kategori', kategori,
-                        'status', status_kondisi,
-                        'keterangan', keterangan
-                    )
-                ) AS feature FROM titik_mitigasi
-            ) features;
-        `;
-        const result = await pool.query(queryText);
-        
-        // Cek jika database masih kosong melompong
-        if (!result.rows[0].jsonb_build_object.features) {
-            return res.json({ type: "FeatureCollection", features: [] });
-        }
-        
-        res.json(result.rows[0].jsonb_build_object);
-    } catch (err) {
-        console.error('Eror query spasial:', err.message);
-        res.status(500).send("Gagal mengambil data peta spasial Lampung.");
-    }
-});
+        // Query disesuaikan dengan nama kolom hasil tangkapan layar DB Anda
+        // Rawan: nama_lokasi, Balai: name
+        const rawanQuery = `SELECT id, nama_lokasi, ST_AsGeoJSON(geom) as geom FROM rawan_longsor_db WHERE geom IS NOT NULL`;
+        const balaiQuery = `SELECT id, name, ST_AsGeoJSON(geom) as geom FROM balai_db WHERE geom IS NOT NULL`;
 
+        const rawanRes = await pool.query(rawanQuery);
+        const balaiRes = await pool.query(balaiQuery);
 
-// ==========================================
-// 3. ENDPOINT ADMIN: Fitur Simulasi Pemicu Bencana
-// ==========================================
-// API rahasia untuk mengubah status titik bencana dari 'Normal' menjadi 'Siaga Bahaya' secara instan
-app.post('/api/admin/simulasi', async (req, res) => {
-    const { id_titik, status_baru, keterangan_baru } = req.body;
-    
-    // Validasi input sederhana biar gak crash
-    if (!id_titik || !status_baru) {
-        return res.status(400).json({ error: "Data id_titik dan status_baru wajib diisi!" });
-    }
-
-    try {
-        const updateQuery = `
-            UPDATE titik_mitigasi 
-            SET status_kondisi = $1, keterangan = $2 
-            WHERE id = $3
-            RETURNING *;
-        `;
-        const result = await pool.query(updateQuery, [status_baru, keterangan_baru, id_titik]);
-        
-        if (result.rowCount === 0) {
-            return res.status(404).json({ error: "Id titik mitigasi tidak ditemukan di database." });
-        }
-
-        res.json({ 
-            message: "⚡ Simulasi Sukses! Status lapangan berhasil diubah Admin.", 
-            data: result.rows[0] 
+        res.json({
+            rawan: rawanRes.rows.map(r => ({
+                type: "Feature",
+                geometry: JSON.parse(r.geom),
+                properties: { nama: r.nama_lokasi || "Lokasi Rawan" }
+            })),
+            balai: balaiRes.rows.map(r => ({
+                type: "Feature",
+                geometry: JSON.parse(r.geom),
+                properties: { nama: r.name || "Balai Evakuasi" }
+            }))
         });
     } catch (err) {
-        console.error('Eror update simulasi admin:', err.message);
-        res.status(500).send("Gagal mengeksekusi simulasi kendali admin.");
+        console.error("DEBUG ERROR:", err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-
-// ==========================================
-// 4. MENYALAKAN MESIN SERVER NODE.JS
-// ==========================================
-app.listen(PORT, () => {
-    console.log(`====================================================`);
-    console.log(`🚀 Server WARLO aman terkendali bebas dari cacing worm!`);
-    console.log(`📡 Mengudara di link: http://localhost:${PORT}`);
-    console.log(`====================================================`);
+app.get('/api/cari-rute', async (req, res) => {
+    const { lat, lng } = req.query;
+    try {
+        // Cari balai terdekat dengan ST_Distance
+        const query = `
+            SELECT name, ST_AsGeoJSON(geom) as geom 
+            FROM balai_db 
+            ORDER BY geom <-> ST_SetSRID(ST_Point($1, $2), 4326) ASC 
+            LIMIT 1`;
+        const result = await pool.query(query, [lng, lat]);
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
+
+app.post('/api/simulasi', async (req, res) => {
+    const { nama, jenis, lat, lng } = req.body;
+    const table = (jenis === 'rawan') ? 'rawan_longsor_db' : 'balai_db';
+    const column = (jenis === 'rawan') ? 'nama_lokasi' : 'name';
+
+    try {
+        const query = `INSERT INTO ${table} (${column}, geom) 
+                       VALUES ($1, ST_SetSRID(ST_Point($2, $3), 4326))`;
+        await pool.query(query, [nama, lng, lat]); // lng dulu baru lat (GeoJSON standar)
+        res.json({ message: "Sukses!" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.listen(PORT, () => console.log('🚀 Server WARLO online di: http://localhost:3000'));

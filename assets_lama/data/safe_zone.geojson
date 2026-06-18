@@ -1,0 +1,56 @@
+{
+  "type": "FeatureCollection",
+  "name": "safe_zone",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": 1, "nama": "Posko Evakuasi Kec. Kota Agung", "tipe": "posko", "kapasitas": 200, "kabupaten": "Tanggamus" },
+      "geometry": { "type": "Point", "coordinates": [104.6285, -5.4935] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 2, "nama": "Posko Evakuasi Kec. Wonosobo", "tipe": "posko", "kapasitas": 150, "kabupaten": "Tanggamus" },
+      "geometry": { "type": "Point", "coordinates": [104.5512, -5.4302] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 3, "nama": "Posko Evakuasi Kec. Liwa", "tipe": "posko", "kapasitas": 300, "kabupaten": "Lampung Barat" },
+      "geometry": { "type": "Point", "coordinates": [104.0685, -5.0420] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 4, "nama": "Posko Evakuasi Kec. Sukau", "tipe": "posko", "kapasitas": 120, "kabupaten": "Lampung Barat" },
+      "geometry": { "type": "Point", "coordinates": [104.2815, -5.1190] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 5, "nama": "Titik Kumpul Lapangan Kota Agung", "tipe": "titik_kumpul", "kapasitas": 500, "kabupaten": "Tanggamus" },
+      "geometry": { "type": "Point", "coordinates": [104.6320, -5.4880] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 6, "nama": "Titik Kumpul GOR Liwa", "tipe": "titik_kumpul", "kapasitas": 800, "kabupaten": "Lampung Barat" },
+      "geometry": { "type": "Point", "coordinates": [104.0720, -5.0380] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 7, "nama": "Titik Kumpul Lapangan Pringsewu", "tipe": "titik_kumpul", "kapasitas": 600, "kabupaten": "Pringsewu" },
+      "geometry": { "type": "Point", "coordinates": [104.9730, -5.3580] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 8, "nama": "Posko Evakuasi Kec. Gedong Tataan", "tipe": "posko", "kapasitas": 180, "kabupaten": "Pesawaran" },
+      "geometry": { "type": "Point", "coordinates": [105.0810, -5.3920] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 9, "nama": "Titik Kumpul Alun-Alun Bandar Lampung", "tipe": "titik_kumpul", "kapasitas": 1000, "kabupaten": "Bandar Lampung" },
+      "geometry": { "type": "Point", "coordinates": [105.2615, -5.4270] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 10, "nama": "Posko Evakuasi BPBD Lampung", "tipe": "posko", "kapasitas": 400, "kabupaten": "Bandar Lampung" },
+      "geometry": { "type": "Point", "coordinates": [105.2510, -5.3950] }
+    }
+  ]
+}

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Dashboard Admin — WARLO</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--hijau-tua:#1b4332;--hijau:#2d6a4f;--hijau-muda:#40916c;--hijau-terang:#74c69d;--krem:#f8f3ec;--krem-gelap:#ede5d8;}
+    body{display:flex;height:100vh;overflow:hidden;font-family:'Inter',sans-serif;background:#f1f5f4;}
+
+    /* SIDEBAR */
+    #sidebar{width:220px;background:var(--hijau-tua);display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;box-shadow:2px 0 16px rgba(0,0,0,.2);}
+    .sb-brand{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .sb-brand .logo{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#fff;letter-spacing:-1px;}
+    .sb-brand .sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+    .sb-brand .badge{display:inline-block;margin-top:8px;background:#ef4444;color:#fff;font-size:9px;padding:2px 8px;border-radius:100px;font-weight:600;letter-spacing:1px;}
+    .sb-section{padding:16px 12px 8px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);}
+    .sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:0 8px;border-radius:8px;text-decoration:none;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;transition:all .15s;}
+    .sb-item .icon{font-size:16px;width:20px;text-align:center;}
+    .sb-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+    .sb-item.active{background:var(--hijau-muda);color:#fff;}
+    .sb-item .badge-num{margin-left:auto;background:#ef4444;color:#fff;font-size:9px;padding:1px 6px;border-radius:100px;font-weight:700;}
+    .sb-bottom{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
+    .sb-user{display:flex;align-items:center;gap:10px;padding:10px 8px;color:rgba(255,255,255,.7);font-size:12px;}
+    .sb-avatar{width:32px;height:32px;border-radius:50%;background:var(--hijau-muda);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;}
+    .sb-user-info .name{font-weight:600;color:#fff;}
+    .sb-user-info .role{font-size:10px;color:rgba(255,255,255,.4);}
+    .btn-user-web{display:flex;align-items:center;gap:6px;margin:0 8px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:11px;text-decoration:none;transition:all .15s;}
+    .btn-user-web:hover{background:rgba(255,255,255,.12);color:#fff;}
+
+    /* MAIN */
+    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    #topbar{height:56px;background:#fff;border-bottom:1px solid #e8ede9;display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;}
+    #topbar h1{font-size:15px;font-weight:700;color:var(--hijau-tua);flex:1;}
+    .topbar-chip{display:flex;align-items:center;gap:6px;padding:5px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:100px;font-size:11px;font-weight:600;color:#16a34a;}
+    .topbar-chip.bahaya{background:#fef2f2;border-color:#fecaca;color:#dc2626;}
+    .topbar-chip.waspada{background:#fefce8;border-color:#fde68a;color:#ca8a04;}
+    .topbar-chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.5s infinite;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .topbar-time{font-size:11px;color:#999;}
+    .btn-refresh{padding:7px 14px;background:var(--hijau-muda);color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;}
+    .btn-refresh:hover{background:var(--hijau);}
+
+    #content{flex:1;overflow-y:auto;padding:24px;}
+
+    /* ALERT BANNER */
+    .alert-banner{background:linear-gradient(135deg,#7f1d1d,#dc2626);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;color:#fff;}
+    .alert-banner .ab-icon{font-size:28px;flex-shrink:0;}
+    .alert-banner h3{font-size:14px;font-weight:700;margin-bottom:2px;}
+    .alert-banner p{font-size:12px;opacity:.85;line-height:1.4;}
+    .alert-banner .ab-btn{margin-left:auto;flex-shrink:0;padding:8px 16px;background:#fff;color:#dc2626;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+    .alert-banner.hidden{display:none;}
+
+    /* STAT CARDS */
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+    .stat-card{background:#fff;border-radius:12px;padding:20px;border:1px solid #e8ede9;position:relative;overflow:hidden;transition:box-shadow .15s;}
+    .stat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);}
+    .stat-card::before{content:'';position:absolute;top:0;right:0;width:90px;height:90px;border-radius:50%;opacity:.07;transform:translate(24px,-24px);}
+    .stat-card.merah::before{background:#ef4444;} .stat-card.kuning::before{background:#eab308;}
+    .stat-card.biru::before{background:#0ea5e9;}   .stat-card.hijau::before{background:var(--hijau-muda);}
+    .stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:10px;}
+    .stat-val{font-family:'Playfair Display',serif;font-size:38px;font-weight:700;color:var(--hijau-tua);line-height:1;}
+    .stat-val.loading{color:#e5e5e5;}
+    .stat-sub{font-size:11px;color:#aaa;margin-top:6px;line-height:1.4;}
+    .stat-trend{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;margin-top:8px;}
+    .stat-trend.up{background:#dcfce7;color:#16a34a;} .stat-trend.down{background:#fee2e2;color:#dc2626;}
+
+    /* DB STATUS BADGE */
+    .db-status{display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:100px;border:1px solid #e5e5e5;background:#f9f9f9;color:#888;margin-bottom:20px;}
+    .db-status .db-dot{width:6px;height:6px;border-radius:50%;background:#aaa;}
+    .db-status.online .db-dot{background:#22c55e;animation:blink 2s infinite;}
+    .db-status.online{color:#16a34a;background:#f0fdf4;border-color:#bbf7d0;}
+    .db-status.offline .db-dot{background:#ef4444;}
+    .db-status.offline{color:#dc2626;background:#fef2f2;border-color:#fecaca;}
+
+    /* GRID BAWAH */
+    .bottom-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;}
+    .col-left{display:flex;flex-direction:column;gap:16px;}
+    .col-right{display:flex;flex-direction:column;gap:16px;}
+
+    .widget{background:#fff;border-radius:12px;border:1px solid #e8ede9;overflow:hidden;}
+    .widget-header{padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;}
+    .widget-header h3{font-size:13px;font-weight:700;color:var(--hijau-tua);}
+    .widget-header a,.wh-btn{font-size:11px;color:var(--hijau-muda);text-decoration:none;font-weight:500;background:none;border:none;cursor:pointer;padding:4px 10px;border-radius:6px;}
+    .widget-header a:hover,.wh-btn:hover{background:#f0fdf4;}
+
+    /* Tabel kejadian */
+    .tbl{width:100%;border-collapse:collapse;}
+    .tbl th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#aaa;font-weight:600;text-align:left;padding:8px 14px;border-bottom:1px solid #f0f0f0;}
+    .tbl td{font-size:12px;padding:10px 14px;border-bottom:1px solid #fafafa;color:#444;vertical-align:middle;}
+    .tbl tr:last-child td{border:none;}
+    .tbl tr:hover td{background:#fafdf9;cursor:pointer;}
+    .tbl-nama{font-weight:600;color:var(--hijau-tua);}
+    .tbl-kab{font-size:10px;color:#aaa;margin-top:1px;}
+    .badge-status{display:inline-block;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;}
+    .badge-status.bahaya{background:#fee2e2;color:#dc2626;}
+    .badge-status.waspada{background:#fef9c3;color:#ca8a04;}
+    .badge-status.aman,.badge-status.selesai{background:#dcfce7;color:#16a34a;}
+
+    /* Sebaran bar */
+    .bar-chart{display:flex;flex-direction:column;gap:10px;padding:16px 20px;}
+    .bar-row{display:flex;align-items:center;gap:10px;}
+    .bar-label{font-size:11px;color:#555;width:100px;flex-shrink:0;}
+    .bar-track{flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;}
+    .bar-fill{height:100%;border-radius:4px;background:var(--hijau-muda);transition:width .8s;}
+    .bar-val{font-size:11px;font-weight:600;color:var(--hijau);width:24px;text-align:right;}
+
+    /* Timeline */
+    .timeline{padding:8px 16px;}
+    .tl-item{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #f5f5f5;}
+    .tl-item:last-child{border:none;}
+    .tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px;}
+    .tl-dot.merah{background:#fee2e2;} .tl-dot.kuning{background:#fef9c3;}
+    .tl-dot.hijau{background:#dcfce7;} .tl-dot.biru{background:#e0f2fe;}
+    .tl-content p{font-size:12px;color:#333;line-height:1.5;}
+    .tl-content .tl-time{font-size:10px;color:#aaa;margin-top:2px;}
+
+    /* Kab list */
+    .kab-list{padding:12px 16px;display:flex;flex-direction:column;gap:6px;}
+    .kab-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fdf9;border-radius:8px;font-size:12px;cursor:pointer;transition:background .15s;}
+    .kab-item:hover{background:#f0fdf4;}
+    .kab-name{font-weight:500;color:var(--hijau-tua);}
+    .kab-num{font-weight:700;color:var(--hijau-muda);}
+
+    /* Simulasi status */
+    .sim-status-box{margin:16px;border-radius:10px;padding:14px 16px;}
+    .sim-status-box.aman{background:#f0fdf4;border:1px solid #bbf7d0;}
+    .sim-status-box.waspada{background:#fefce8;border:1px solid #fde68a;}
+    .sim-status-box.bahaya{background:#fef2f2;border:1px solid #fecaca;}
+    .sim-status-box h4{font-size:13px;font-weight:700;margin-bottom:4px;}
+    .sim-status-box.aman h4{color:#16a34a;}
+    .sim-status-box.waspada h4{color:#ca8a04;}
+    .sim-status-box.bahaya h4{color:#dc2626;}
+    .sim-status-box p{font-size:11px;color:#555;line-height:1.5;}
+    .sim-status-box .indeks{font-size:24px;font-weight:900;font-family:'Playfair Display',serif;float:right;margin-top:-4px;}
+
+    .empty-row td{text-align:center;color:#aaa;font-size:12px;padding:24px;}
+  </style>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../assets/css/glass.css">
+</head>
+<body class="warlo-admin">
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-brand">
+    <div class="logo">WARLO</div>
+    <div class="sub">Admin Panel</div>
+    <div class="badge">● LIVE</div>
+  </div>
+  <div class="sb-section">Menu Utama</div>
+  <a href="dashboard.html" class="sb-item active"><span class="icon"><i class="bi bi-bar-chart-fill"></i></span> Dashboard</a>
+  <a href="longsor.html"   class="sb-item"><span class="icon"><i class="bi bi-triangle-fill"></i></span> Monitoring Longsor <span class="badge-num" id="sb-count-longsor">…</span></a>
+  <a href="pengguna.html"  class="sb-item"><span class="icon"><i class="bi bi-people-fill"></i></span> Pengguna Terdampak</a>
+  <a href="simulasi.html"  class="sb-item"><span class="icon"><i class="bi bi-gear-fill"></i></span> Simulasi Risiko</a>
+  <div class="sb-section">Lainnya</div>
+  <a href="../user/peta.html" class="btn-user-web"><i class="bi bi-map-fill"></i> Buka Halaman User</a>
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar">A</div>
+      <div class="sb-user-info">
+        <div class="name">Admin BPBD</div>
+        <div class="role">Provinsi Lampung</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <h1><i class="bi bi-bar-chart-fill"></i> Dashboard Overview</h1>
+    <div class="topbar-chip" id="chip-sim"><span class="dot"></span><span id="chip-label">Memuat status simulasi...</span></div>
+    <div class="topbar-time" id="clock"></div>
+    <button class="btn-refresh" onclick="muatSemua()"><i class="bi bi-arrow-repeat"></i> Refresh</button>
+  </div>
+
+  <div id="content">
+
+    <!-- DB STATUS -->
+    <div class="db-status" id="db-status-bar">
+      <span class="db-dot"></span>
+      <span id="db-status-text">Menghubungi server database...</span>
+    </div>
+
+    <!-- ALERT BANNER -->
+    <div class="alert-banner hidden" id="alert-banner">
+      <div class="ab-icon"><i class="bi bi-broadcast" style="color:#ef4444"></i></div>
+      <div>
+        <h3 id="ab-title">Situasi Darurat Terdeteksi</h3>
+        <p id="ab-desc">Data simulasi menunjukkan indikasi bahaya di beberapa wilayah.</p>
+      </div>
+      <button class="ab-btn" onclick="window.location.href='longsor.html'">Lihat Detail →</button>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+      <div class="stat-card merah">
+        <div class="stat-label">Zona Rawan (DB)</div>
+        <div class="stat-val loading" id="s-rawan">—</div>
+        <div class="stat-sub" id="s-rawan-sub">Memuat dari database...</div>
+        <div class="stat-trend up" id="s-rawan-trend" style="display:none"></div>
+      </div>
+      <div class="stat-card kuning">
+        <div class="stat-label">Balai Evakuasi (DB)</div>
+        <div class="stat-val loading" id="s-balai">—</div>
+        <div class="stat-sub" id="s-balai-sub">Memuat dari database...</div>
+      </div>
+      <div class="stat-card biru">
+        <div class="stat-label">Indeks Risiko Simulasi</div>
+        <div class="stat-val loading" id="s-indeks">—</div>
+        <div class="stat-sub" id="s-indeks-sub">Belum ada data simulasi</div>
+      </div>
+      <div class="stat-card hijau">
+        <div class="stat-label">Status Sistem</div>
+        <div class="stat-val loading" id="s-status">—</div>
+        <div class="stat-sub" id="s-status-sub">Menghubungi server...</div>
+      </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid">
+      <div class="col-left">
+
+        <!-- Tabel titik rawan dari DB -->
+        <div class="widget">
+          <div class="widget-header">
+            <h3><i class="bi bi-record-circle-fill" style="color:#ef4444"></i> Titik Rawan Longsor (Database)</h3>
+            <a href="simulasi.html">Kelola →</a>
+          </div>
+          <div style="padding:0;">
+            <table class="tbl">
+              <thead><tr><th>Nama Lokasi</th><th>Koordinat</th><th>Kategori</th></tr></thead>
+              <tbody id="tbl-rawan"><tr class="empty-row"><td colspan="3">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Sebaran per kabupaten (statis referensi) -->
+        <div class="widget">
+          <div class="widget-header"><h3><i class="bi bi-geo-alt-fill"></i> Sebaran Histori Kejadian per Kabupaten</h3></div>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Lampung Barat</span><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><span class="bar-val">18</span></div>
+            <div class="bar-row"><span class="bar-label">Tanggamus</span><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><span class="bar-val">14</span></div>
+            <div class="bar-row"><span class="bar-label">Pesawaran</span><div class="bar-track"><div class="bar-fill" style="width:55%;background:#eab308"></div></div><span class="bar-val">11</span></div>
+            <div class="bar-row"><span class="bar-label">Way Kanan</span><div class="bar-track"><div class="bar-fill" style="width:40%;background:#eab308"></div></div><span class="bar-val">8</span></div>
+            <div class="bar-row"><span class="bar-label">Lampung Utara</span><div class="bar-track"><div class="bar-fill" style="width:25%;background:#ef4444"></div></div><span class="bar-val">5</span></div>
+            <div class="bar-row"><span class="bar-label">Lainnya</span><div class="bar-track"><div class="bar-fill" style="width:15%;background:#aaa"></div></div><span class="bar-val">3</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-right">
+
+        <!-- Status simulasi terkini -->
+        <div class="widget">
+          <div class="widget-header">
+            <h3><i class="bi bi-gear-fill"></i> Status Simulasi Terkini</h3>
+            <a href="simulasi.html">Ubah →</a>
+          </div>
+          <div id="sim-status-widget">
+            <div class="sim-status-box aman">
+              <h4>Memuat data simulasi...</h4>
+              <p>Menghubungi server API.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aktivitas terkini -->
+        <div class="widget">
+          <div class="widget-header">
+            <h3><i class="bi bi-bell-fill"></i> Aktivitas Terkini</h3>
+            <button class="wh-btn" onclick="document.getElementById('timeline').innerHTML='<p style=font-size:11px;color:#aaa;text-align:center;padding:20px>Log dibersihkan</p>'">Hapus</button>
+          </div>
+          <div class="timeline" id="timeline">
+            <div class="tl-item"><div class="tl-dot biru">⏳</div><div class="tl-content"><p>Memuat aktivitas dari server...</p><div class="tl-time">—</div></div></div>
+          </div>
+        </div>
+
+        <!-- Balai evakuasi dari DB -->
+        <div class="widget">
+          <div class="widget-header">
+            <h3><i class="bi bi-record-circle-fill" style="color:#eab308"></i> Balai Evakuasi (Database)</h3>
+            <a href="simulasi.html">Tambah →</a>
+          </div>
+          <div class="kab-list" id="list-balai">
+            <div style="font-size:11px;color:#aaa;text-align:center;padding:12px;">Memuat data...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:3000';
+
+// ── CLOCK ──
+function updateClock(){
+  var now=new Date();
+  document.getElementById('clock').textContent=
+    now.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'})
+    +' · '+now.toLocaleTimeString('id-ID');
+}
+updateClock(); setInterval(updateClock,1000);
+
+// ── TAMBAH LOG ──
+function tambahLog(icon, dotClass, teks, waktu){
+  var tl=document.getElementById('timeline');
+  if(tl.querySelector('.tl-item .tl-dot.biru')) tl.innerHTML=''; // hapus placeholder
+  tl.insertAdjacentHTML('afterbegin',`
+    <div class="tl-item">
+      <div class="tl-dot ${dotClass}">${icon}</div>
+      <div class="tl-content"><p>${teks}</p><div class="tl-time">${waktu||new Date().toLocaleTimeString('id-ID')}</div></div>
+    </div>`);
+}
+
+// ── MUAT DATA DB ──
+function muatSemua(){
+  document.getElementById('db-status-bar').className='db-status';
+  document.getElementById('db-status-text').textContent='Menghubungi server...';
+
+  fetch(`${API_BASE}/api/simulasi`)
+    .then(res => res.json())
+    .then(data => {
+      var rawan = data.rawan || [];
+      var balai = data.balai || [];
+
+      // DB status
+      var dbEl = document.getElementById('db-status-bar');
+      dbEl.className='db-status online';
+      document.getElementById('db-status-text').innerHTML=`<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Server terhubung — ${rawan.length} titik rawan, ${balai.length} balai evakuasi dimuat`;
+
+      // Stat cards
+      document.getElementById('s-rawan').textContent = rawan.length;
+      document.getElementById('s-rawan').className = 'stat-val';
+      document.getElementById('s-rawan-sub').textContent = rawan.length>0 ? 'Titik aktif di peta user' : 'Belum ada titik rawan di DB';
+
+      document.getElementById('s-balai').textContent = balai.length;
+      document.getElementById('s-balai').className = 'stat-val';
+      document.getElementById('s-balai-sub').textContent = balai.length>0 ? 'Siap sebagai tujuan evakuasi' : 'Belum ada balai di DB';
+
+      document.getElementById('s-status').innerHTML = '<i class="bi bi-record-circle-fill" style="color:#22c55e"></i>';
+      document.getElementById('s-status').className = 'stat-val';
+      document.getElementById('s-status-sub').textContent = 'Server Node.js aktif';
+
+      // Sidebar badge
+      document.getElementById('sb-count-longsor').textContent = rawan.length;
+
+      // Tabel rawan
+      var tbody = document.getElementById('tbl-rawan');
+      if(rawan.length===0){
+        tbody.innerHTML='<tr class="empty-row"><td colspan="3">Belum ada titik rawan di database. <a href="simulasi.html" style="color:var(--hijau-muda)">Tambah via Simulasi →</a></td></tr>';
+      } else {
+        tbody.innerHTML = rawan.map(f=>{
+          var coords = f.geometry.coordinates;
+          var nama = f.properties.nama||'—';
+          return `<tr onclick="window.location.href='simulasi.html'">
+            <td><div class="tbl-nama"><i class="bi bi-record-circle-fill" style="color:#ef4444"></i> ${nama}</div></td>
+            <td><div style="font-size:10px;color:#888;font-family:monospace">${coords[1].toFixed(4)}, ${coords[0].toFixed(4)}</div></td>
+            <td><span class="badge-status bahaya">RAWAN</span></td>
+          </tr>`;
+        }).join('');
+      }
+
+      // List balai
+      var listBalai = document.getElementById('list-balai');
+      if(balai.length===0){
+        listBalai.innerHTML='<div style="font-size:11px;color:#aaa;text-align:center;padding:12px;">Belum ada balai evakuasi di DB.</div>';
+      } else {
+        listBalai.innerHTML = balai.map(f=>{
+          var nama = f.properties.nama||'Balai Evakuasi';
+          var coords = f.geometry.coordinates;
+          return `<div class="kab-item" onclick="window.location.href='simulasi.html'">
+            <span class="kab-name"><i class="bi bi-record-circle-fill" style="color:#eab308"></i> ${nama}</span>
+            <span class="kab-num" style="font-size:10px;color:#888;font-family:monospace">${coords[1].toFixed(3)}, ${coords[0].toFixed(3)}</span>
+          </div>`;
+        }).join('');
+      }
+
+      tambahLog('<i class="bi bi-broadcast-pin"></i>','biru',`Data DB dimuat: ${rawan.length} rawan + ${balai.length} balai`,'Baru saja');
+
+      // Cek simulasi status
+      muatStatusSimulasi();
+    })
+    .catch(err => {
+      var dbEl = document.getElementById('db-status-bar');
+      dbEl.className='db-status offline';
+      document.getElementById('db-status-text').innerHTML='<i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Server tidak aktif (localhost:3000). Pastikan Node.js berjalan.';
+
+      ['s-rawan','s-balai','s-indeks','s-status'].forEach(id=>{
+        var el=document.getElementById(id);
+        el.textContent='—'; el.className='stat-val';
+      });
+      document.getElementById('s-status').innerHTML='<i class="bi bi-record-circle-fill" style="color:#ef4444"></i>';
+      document.getElementById('s-status-sub').textContent='Server tidak dapat dihubungi';
+      document.getElementById('tbl-rawan').innerHTML='<tr class="empty-row"><td colspan="3"><i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Tidak bisa terhubung ke server.</td></tr>';
+      tambahLog('<i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i>','merah','Server API tidak aktif. Cek koneksi ke localhost:3000.','Baru saja');
+    });
+}
+
+function muatStatusSimulasi(){
+  fetch(`${API_BASE}/api/simulasi/status`)
+    .then(res => res.json())
+    .then(sim => {
+      var level  = sim.level  || 'aman';
+      var indeks = sim.indeks || 0;
+      var waktu  = sim.timestamp ? new Date(sim.timestamp).toLocaleString('id-ID') : '—';
+
+      document.getElementById('s-indeks').textContent = indeks;
+      document.getElementById('s-indeks').className = 'stat-val';
+      document.getElementById('s-indeks-sub').textContent = `Level: ${level.toUpperCase()} (dari simulasi admin)`;
+
+      // Widget simulasi
+      var ico = level==='bahaya'?'<i class="bi bi-record-circle-fill" style="color:#ef4444"></i>':level==='waspada'?'<i class="bi bi-record-circle-fill" style="color:#eab308"></i>':'<i class="bi bi-record-circle-fill" style="color:#22c55e"></i>';
+      document.getElementById('sim-status-widget').innerHTML = `
+        <div class="sim-status-box ${level}">
+          <span class="indeks">${indeks}</span>
+          <h4>${ico} ${level.toUpperCase()}</h4>
+          <p>Indeks risiko: <b>${indeks}/100</b><br>Diperbarui: ${waktu}<br>6 faktor telah dihitung oleh admin.</p>
+        </div>`;
+
+      // Topbar chip
+      var chip = document.getElementById('chip-sim');
+      var lbl  = document.getElementById('chip-label');
+      chip.className = 'topbar-chip ' + (level==='aman'?'':''+level);
+      lbl.textContent = `Simulasi: ${level.toUpperCase()} (${indeks}/100)`;
+
+      // Alert banner
+      if(level==='bahaya'){
+        var ab=document.getElementById('alert-banner');
+        ab.classList.remove('hidden');
+        document.getElementById('ab-title').innerHTML='<i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Simulasi Menunjukkan BAHAYA TINGGI';
+        document.getElementById('ab-desc').textContent=`Indeks risiko: ${indeks}/100. Pertimbangkan broadcast alert ke pengguna di zona terdampak.`;
+        tambahLog('<i class="bi bi-broadcast" style="color:#ef4444"></i>','merah',`Status simulasi: BAHAYA (${indeks}/100). Diperlukan tindakan segera.`,waktu);
+      } else if(level==='waspada'){
+        tambahLog('<i class="bi bi-lightning-charge-fill"></i>','kuning',`Status simulasi: WASPADA (${indeks}/100). Pantau terus perkembangan.`,waktu);
+      } else {
+        tambahLog('<i class="bi bi-check-circle-fill" style="color:#22c55e"></i>','hijau',`Status simulasi: AMAN (${indeks}/100). Kondisi normal.`,waktu);
+      }
+    })
+    .catch(()=>{
+      document.getElementById('s-indeks').textContent='N/A';
+      document.getElementById('s-indeks').className='stat-val';
+      document.getElementById('s-indeks-sub').textContent='Simulasi belum dijalankan admin';
+      document.getElementById('chip-label').textContent='Simulasi: Belum ada data';
+      document.getElementById('sim-status-widget').innerHTML=`
+        <div class="sim-status-box aman" style="margin:16px">
+          <h4>Belum ada data simulasi</h4>
+          <p>Admin belum menjalankan simulasi. <a href="simulasi.html" style="color:var(--hijau-muda)">Jalankan sekarang →</a></p>
+        </div>`;
+    });
+}
+
+// ── INIT ──
+muatSemua();
+// Auto-refresh setiap 60 detik
+setInterval(muatSemua, 60000);
+</script>
+</body>
+</html>

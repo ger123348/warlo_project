@@ -1,0 +1,490 @@
+/* ============================================================
+   WARLO — GLASSMORPHISM DESIGN SYSTEM
+   Shared theme override for admin & user dashboards.
+   Loaded AFTER each page's original <style> block so these
+   rules win on equal specificity without touching markup/JS.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root{
+  /* brand greens (kept compatible with original palette) */
+  --g-900:#102a20;
+  --g-800:#1b4332;
+  --g-700:#2d6a4f;
+  --g-500:#40916c;
+  --g-300:#74c69d;
+  --g-200:#b7e4c7;
+  --g-100:#eafbf2;
+
+  /* glass surfaces */
+  --glass:        rgba(255,255,255,0.46);
+  --glass-strong: rgba(255,255,255,0.66);
+  --glass-soft:   rgba(255,255,255,0.30);
+  --glass-border: rgba(255,255,255,0.55);
+  --glass-shadow: 0 8px 32px -8px rgba(16,42,32,0.25), 0 2px 8px rgba(16,42,32,0.06);
+  --glass-shadow-lg: 0 20px 60px -16px rgba(16,42,32,0.35);
+  --glass-blur: blur(20px) saturate(180%);
+  --glass-blur-sm: blur(10px) saturate(160%);
+
+  --sidebar-glass: linear-gradient(165deg, rgba(16,42,32,0.78), rgba(27,67,50,0.62));
+  --radius: 20px;
+  --radius-sm: 12px;
+}
+
+/* ============================================================
+   BASE / TYPOGRAPHY
+   ============================================================ */
+html, body{
+  font-family:'Plus Jakarta Sans','Inter',sans-serif !important;
+}
+
+body{
+  position:relative;
+  background:
+    radial-gradient(circle at 12% 8%,  rgba(149,213,178,.55) 0%, transparent 42%),
+    radial-gradient(circle at 92% 18%, rgba(64,145,108,.40) 0%, transparent 45%),
+    radial-gradient(circle at 18% 92%, rgba(116,198,157,.45) 0%, transparent 45%),
+    radial-gradient(circle at 88% 88%, rgba(27,67,50,.30) 0%, transparent 45%),
+    linear-gradient(160deg, #eafbf2 0%, #e3f6ed 45%, #d9f0e6 100%) !important;
+  background-attachment: fixed !important;
+}
+
+i.bi{
+  filter: drop-shadow(0 1px 2px rgba(16,42,32,.18));
+}
+
+/* scrollbars */
+*::-webkit-scrollbar{ width:8px; height:8px; }
+*::-webkit-scrollbar-track{ background:transparent; }
+*::-webkit-scrollbar-thumb{
+  background: rgba(27,67,50,.25);
+  border-radius: 10px;
+}
+*::-webkit-scrollbar-thumb:hover{ background: rgba(27,67,50,.4); }
+
+/* selection */
+::selection{ background: var(--g-300); color:#0b261d; }
+
+/* ============================================================
+   SIDEBAR — glass panel, floating
+   ============================================================ */
+#sidebar{
+  background: var(--sidebar-glass) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255,255,255,.12) !important;
+  box-shadow: var(--glass-shadow-lg) !important;
+  border-radius: 0 24px 24px 0;
+  margin: 0;
+}
+
+.sb-brand{ border-bottom: 1px solid rgba(255,255,255,.10) !important; }
+.sb-brand .logo{
+  background: linear-gradient(135deg,#eafbf2,#b7e4c7);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  letter-spacing: 1px;
+}
+.sb-section{ color: rgba(255,255,255,.35) !important; }
+
+.sb-item{
+  color: rgba(255,255,255,.62) !important;
+  border-radius: 12px !important;
+  transition: all .2s ease !important;
+}
+.sb-item:hover{
+  background: rgba(255,255,255,.10) !important;
+  color:#fff !important;
+  transform: translateX(2px);
+}
+.sb-item.active{
+  background: linear-gradient(135deg, rgba(116,198,157,.85), rgba(64,145,108,.85)) !important;
+  color:#fff !important;
+  box-shadow: 0 6px 18px -6px rgba(64,145,108,.7);
+}
+.btn-user-web{
+  background: rgba(255,255,255,.08) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  border-radius: 12px !important;
+  color: rgba(255,255,255,.7) !important;
+  backdrop-filter: var(--glass-blur-sm);
+}
+.btn-user-web:hover{ background: rgba(255,255,255,.18) !important; color:#fff !important; }
+
+.sb-bottom{ border-top: 1px solid rgba(255,255,255,.10) !important; }
+.sb-avatar{
+  background: linear-gradient(135deg, var(--g-300), var(--g-500)) !important;
+  box-shadow: 0 4px 12px -2px rgba(64,145,108,.6), inset 0 1px 1px rgba(255,255,255,.4);
+}
+
+/* user (icon) sidebar */
+.sb-logo{
+  background: linear-gradient(135deg, var(--g-300), var(--g-500)) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--glass-shadow), inset 0 1px 2px rgba(255,255,255,.45);
+}
+.sb-darurat{
+  background: linear-gradient(135deg,#ff6b6b,#dc2626) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 6px 18px -4px rgba(220,38,38,.6), inset 0 1px 2px rgba(255,255,255,.35) !important;
+}
+.sb-darurat:hover{ background: linear-gradient(135deg,#ff8787,#ef4444) !important; }
+.sb-home{
+  background: rgba(255,255,255,.08) !important;
+  border-radius: 14px !important;
+  backdrop-filter: var(--glass-blur-sm);
+}
+.sb-home:hover{ background: rgba(255,255,255,.18) !important; color:#fff !important; }
+
+/* ============================================================
+   TOPBAR — sticky glass strip
+   ============================================================ */
+#topbar{
+  background: var(--glass-strong) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border) !important;
+  box-shadow: 0 4px 24px -8px rgba(16,42,32,.10);
+}
+#topbar h1{ color: var(--g-800) !important; letter-spacing:.2px; }
+
+.topbar-chip, .status-chip, .topbar-stat{
+  background: var(--glass) !important;
+  backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 100px !important;
+}
+.topbar-chip.bahaya, .status-chip.bahaya{ background: rgba(254,242,242,.75) !important; }
+.topbar-chip.waspada, .status-chip.waspada{ background: rgba(254,252,232,.75) !important; }
+
+.btn-refresh, .btn-refresh-sm{
+  background: linear-gradient(135deg, var(--g-300), var(--g-500)) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 6px 16px -4px rgba(64,145,108,.55), inset 0 1px 1px rgba(255,255,255,.4) !important;
+  border: none !important;
+  transition: transform .15s ease, box-shadow .15s ease !important;
+}
+.btn-refresh:hover, .btn-refresh-sm:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px -4px rgba(64,145,108,.65), inset 0 1px 1px rgba(255,255,255,.4) !important;
+}
+
+/* ============================================================
+   GLASS CARDS / WIDGETS / PANELS  (the bulk of UI)
+   ============================================================ */
+#content, #main, #app{ background: transparent !important; }
+
+#panel,
+.widget,
+.stat-card,
+.kejadian-card,
+.info-card,
+.step-item,
+.success-card,
+.warning-card,
+.sim-status-box,
+.status-box,
+.cuaca-main,
+.titik-card,
+.titik-item,
+.forecast-item,
+.faktor-item,
+.faktor-group,
+.layer-item,
+.alert-banner,
+.empty-card,
+.db-status,
+.db-card,
+.filter-bar,
+.tambah-form,
+.custom-form,
+.place-card,
+.kab-item,
+.zona-item,
+.search-result-item,
+.saudara-card,
+.bc-box,
+.fakta-strip,
+.fakta-item,
+.edit-banner,
+.share-box,
+.toast,
+.ac-item,
+.darurat-item,
+.det-btn,
+.hero-topik,
+.sim-banner,
+.peringatan-cuaca,
+.rute-box,
+.topik-btn,
+.koordinat-box,
+.modal-box,
+.detail-box,
+.pc-info{
+  background: var(--glass) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--glass-shadow) !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.stat-card:hover, .kejadian-card:hover, .info-card:hover,
+.titik-card:hover, .kab-item:hover, .saudara-card:hover,
+.search-result-item:hover, .topik-btn:hover{
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-lg) !important;
+}
+
+/* nested smaller glass surfaces should be a touch more transparent */
+.cuaca-item, .faktor-item, .layer-item, .forecast-item,
+.bar-chart, .timeline, .kab-list, .log-list, .titik-list{
+  background: var(--glass-soft) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* remove now-redundant inner borders for nested rows */
+.tl-item, .log-item, .layer-item, .kab-item, .faktor-item{
+  border-radius: var(--radius-sm) !important;
+}
+
+/* status accent tints stay legible on glass */
+.stat-card.merah::before{ background:#ef4444; }
+.stat-card.kuning::before{ background:#eab308; }
+.stat-card.biru::before{ background:#0ea5e9; }
+.stat-card.hijau::before{ background: var(--g-500); }
+
+.status-box.aman, .sim-status-box.aman, .peringatan-cuaca.cerah{ background: rgba(220,252,231,.45) !important; }
+.status-box.waspada, .sim-status-box.waspada, .peringatan-cuaca.hujan-sedang{ background: rgba(254,249,195,.45) !important; }
+.status-box.bahaya, .sim-status-box.bahaya, .peringatan-cuaca.hujan-lebat{ background: rgba(254,226,226,.45) !important; }
+
+.cuaca-main{
+  background: linear-gradient(135deg, rgba(27,67,50,.75), rgba(45,106,79,.65)) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+}
+.alert-banner{
+  background: linear-gradient(135deg, rgba(127,29,29,.78), rgba(220,38,38,.72)) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  color:#fff !important;
+}
+.bobot-total{
+  background: linear-gradient(135deg, rgba(27,67,50,.85), rgba(45,106,79,.75)) !important;
+  border: 1px solid rgba(255,255,255,.15) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* widget header */
+.widget-header{
+  border-bottom: 1px solid rgba(255,255,255,.4) !important;
+}
+.widget-header h3{ color: var(--g-800) !important; }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+button, .btn-primary, .btn-secondary, .btn-tambah, .btn-simpan,
+.btn-batal, .btn-hapus, .btn-danger, .btn-export, .btn-kirim,
+.bc-btn, .btn-rute, .btn-gps, .btn-full, .btn-outline, .btn-copy,
+.pc-close, #search-clear, .alert-btn, .kj-btn{
+  border-radius: 12px !important;
+}
+
+.btn-primary, .btn-tambah, .btn-simpan, .btn-kirim, .bc-btn,
+.btn-rute, .btn-gps, .btn-full, .btn-export{
+  background: linear-gradient(135deg, var(--g-300), var(--g-700)) !important;
+  border: none !important;
+  color:#fff !important;
+  box-shadow: 0 8px 22px -6px rgba(45,106,79,.55), inset 0 1px 1px rgba(255,255,255,.35) !important;
+  transition: transform .15s ease, box-shadow .15s ease !important;
+}
+.btn-primary:hover, .btn-tambah:hover, .btn-simpan:hover, .btn-kirim:hover,
+.bc-btn:hover, .btn-rute:hover, .btn-gps:hover, .btn-full:hover, .btn-export:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -6px rgba(45,106,79,.65), inset 0 1px 1px rgba(255,255,255,.35) !important;
+}
+
+.btn-secondary, .btn-batal, .btn-outline{
+  background: var(--glass) !important;
+  backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border) !important;
+  color: var(--g-800) !important;
+}
+.btn-secondary:hover, .btn-batal:hover, .btn-outline:hover{
+  background: var(--glass-strong) !important;
+}
+
+.btn-danger, .btn-hapus, .alert-btn{
+  background: linear-gradient(135deg,#ff8a8a,#dc2626) !important;
+  border:none !important; color:#fff !important;
+  box-shadow: 0 8px 20px -6px rgba(220,38,38,.55), inset 0 1px 1px rgba(255,255,255,.35) !important;
+}
+.btn-danger:hover, .btn-hapus:hover, .alert-btn:hover{ transform: translateY(-1px); }
+
+/* ============================================================
+   FORMS / INPUTS
+   ============================================================ */
+input, select, textarea,
+.form-input, .form-sel, .form-ta, .search-inp, .filter-sel,
+#search-input, .share-link-input{
+  background: rgba(255,255,255,.55) !important;
+  backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--g-800) !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
+}
+input:focus, select:focus, textarea:focus,
+.form-input:focus, .form-sel:focus, .form-ta:focus, .search-inp:focus, #search-input:focus{
+  border-color: var(--g-500) !important;
+  box-shadow: 0 0 0 3px rgba(64,145,108,.18) !important;
+  background: rgba(255,255,255,.75) !important;
+  outline:none !important;
+}
+.form-label, .form-group label{ color: var(--g-800) !important; font-weight:600 !important; }
+
+/* ============================================================
+   BADGES / CHIPS / PILLS
+   ============================================================ */
+.badge-status, .badge, .jarak-badge, .sim-source-badge, .titik-badge,
+.zi-badge, .id-code{
+  border-radius: 100px !important;
+  backdrop-filter: var(--glass-blur-sm);
+}
+.badge-status.bahaya, .badge.bahaya{ background: rgba(254,226,226,.75) !important; color:#dc2626 !important; }
+.badge-status.waspada, .badge.waspada{ background: rgba(254,249,195,.75) !important; color:#ca8a04 !important; }
+.badge-status.aman, .badge-status.selesai, .badge.aman{ background: rgba(220,252,231,.75) !important; color:#16a34a !important; }
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.tbl{ background: transparent !important; }
+.tbl th{
+  color: rgba(27,67,50,.55) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+.tbl td{
+  border-bottom: 1px solid rgba(255,255,255,.35) !important;
+  color: var(--g-800) !important;
+}
+.tbl tr:hover td{ background: rgba(255,255,255,.35) !important; }
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+#modal-darurat, #modal-detail, #modal-tambah,
+[id^="modal-"]{
+  background: rgba(16,42,32,.45) !important;
+  backdrop-filter: blur(6px);
+}
+.modal-box, .detail-box{
+  background: rgba(255,255,255,.78) !important;
+  backdrop-filter: var(--glass-blur);
+}
+.detail-header{
+  background: linear-gradient(135deg, var(--g-800), var(--g-500)) !important;
+  border-radius: var(--radius) var(--radius) 0 0 !important;
+  color:#fff !important;
+}
+
+/* ============================================================
+   MISC POLISH
+   ============================================================ */
+.section-title{ color: var(--g-800) !important; }
+a{ -webkit-tap-highlight-color: transparent; }
+
+/* ============================================================
+   RESPONSIVE — Android / mobile friendly
+   ============================================================ */
+@media (max-width: 860px){
+
+  /* ---------- USER LAYOUT (72px icon sidebar -> bottom nav) ---------- */
+  body.warlo-user{ flex-direction: column !important; }
+  body.warlo-user #sidebar{
+    width: 100% !important;
+    height: 64px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 10px !important;
+    order: 2;
+    border-radius: 22px 22px 0 0 !important;
+    position: sticky; bottom: 0; left:0; z-index: 600;
+  }
+  body.warlo-user #sidebar > .sb-logo{ display:none !important; }
+  body.warlo-user .sb-menu{
+    flex-direction: row !important;
+    flex: 1 !important;
+    justify-content: space-around !important;
+    padding: 0 !important;
+  }
+  body.warlo-user .sb-item{
+    flex-direction: column !important;
+    padding: 6px 8px !important;
+    font-size: 9px !important;
+  }
+  body.warlo-user .sb-item .sb-icon{ font-size:18px !important; }
+  body.warlo-user .sb-bottom{
+    flex-direction: row !important;
+    border-top: none !important;
+    padding: 6px !important;
+    gap: 6px !important;
+    width: auto !important;
+  }
+  body.warlo-user .sb-darurat, body.warlo-user .sb-home{
+    width: 38px !important; height: 38px !important; font-size:16px !important;
+  }
+  body.warlo-user #app{ order:1; flex:1 1 auto; min-height:0; }
+
+  /* peta / saudara split panels stack vertically */
+  body.warlo-user #tengah{ flex-direction: column !important; }
+  body.warlo-user #map{ min-height: 42vh !important; }
+  body.warlo-user #panel{
+    width: 100% !important;
+    max-height: 50vh;
+    border-radius: var(--radius) var(--radius) 0 0 !important;
+  }
+
+  /* ---------- ADMIN LAYOUT (220px sidebar -> top scroll bar) ---------- */
+  body:not(.warlo-user){ flex-direction: column !important; height:auto !important; min-height:100vh; overflow:visible !important; }
+  body:not(.warlo-user) #sidebar{
+    width: 100% !important;
+    height: auto !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    padding: 10px !important;
+    border-radius: 0 0 22px 22px !important;
+    gap: 6px;
+  }
+  body:not(.warlo-user) .sb-brand{
+    border-bottom: none !important; border-right: 1px solid rgba(255,255,255,.12) !important;
+    padding: 0 14px !important; flex-shrink:0;
+  }
+  body:not(.warlo-user) .sb-section{ display:none !important; }
+  body:not(.warlo-user) .sb-item{
+    white-space: nowrap !important; flex-shrink:0;
+  }
+  body:not(.warlo-user) .sb-bottom, body:not(.warlo-user) .btn-user-web{
+    display:none !important;
+  }
+  body:not(.warlo-user) #main{ overflow: visible !important; }
+  body:not(.warlo-user) #content{ overflow: visible !important; }
+
+  body:not(.warlo-user) .stat-grid{ grid-template-columns: 1fr 1fr !important; }
+  body:not(.warlo-user) .bottom-grid{ grid-template-columns: 1fr !important; }
+  body:not(.warlo-user) #tengah{ flex-direction: column !important; }
+  body:not(.warlo-user) #map{ min-height: 42vh !important; }
+  body:not(.warlo-user) #panel{
+    width: 100% !important; max-height:60vh;
+    border-radius: var(--radius) var(--radius) 0 0 !important;
+  }
+
+  #topbar{ flex-wrap: wrap !important; height:auto !important; padding:10px 14px !important; gap:8px !important; }
+  .stat-val, .text-display{ font-size: 1.7rem !important; }
+}
+
+@media (max-width: 480px){
+  .stat-grid{ grid-template-columns: 1fr !important; }
+  #topbar h1{ font-size: 13px !important; }
+}

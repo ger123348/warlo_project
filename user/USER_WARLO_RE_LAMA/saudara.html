@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Monitor Saudara — WARLO</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--hijau-tua:#1b4332;--hijau:#2d6a4f;--hijau-muda:#40916c;--hijau-terang:#74c69d;--krem:#f8f3ec;--krem-gelap:#ede5d8;}
+    body{display:flex;height:100vh;overflow:hidden;font-family:'Inter',sans-serif;}
+
+    #sidebar{width:72px;background:var(--hijau-tua);display:flex;flex-direction:column;align-items:center;padding:16px 0;flex-shrink:0;z-index:500;box-shadow:2px 0 12px rgba(0,0,0,.2);}
+    .sb-logo{width:44px;height:44px;background:var(--hijau-muda);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;text-decoration:none;margin-bottom:28px;}
+    .sb-menu{display:flex;flex-direction:column;gap:4px;flex:1;width:100%;padding:0 10px;}
+    .sb-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 6px;border-radius:8px;text-decoration:none;color:rgba(255,255,255,.5);font-size:9px;font-weight:500;text-align:center;transition:background .15s,color .15s;}
+    .sb-item .sb-icon{font-size:20px;}
+    .sb-item:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);}
+    .sb-item.active{background:var(--hijau-muda);color:#fff;}
+    .sb-bottom{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 10px;width:100%;}
+    .sb-darurat{width:44px;height:44px;background:#dc2626;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;animation:dpulse 2.5s infinite;}
+    @keyframes dpulse{0%,90%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4);}45%{box-shadow:0 0 0 8px rgba(220,38,38,0);}}
+    .sb-home{width:44px;height:44px;background:rgba(255,255,255,.08);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;text-decoration:none;color:rgba(255,255,255,.5);}
+
+    #app{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    #topbar{height:52px;background:#fff;border-bottom:1px solid var(--krem-gelap);display:flex;align-items:center;gap:12px;padding:0 16px;flex-shrink:0;}
+    #topbar h1{font-size:14px;font-weight:700;color:var(--hijau-tua);flex:1;}
+    #tengah{flex:1;display:flex;overflow:hidden;}
+    #map{flex:1;}
+
+    #panel{width:300px;background:#fff;border-left:1px solid var(--krem-gelap);overflow-y:auto;padding:0;flex-shrink:0;display:flex;flex-direction:column;}
+
+    .panel-tabs{display:flex;border-bottom:1px solid var(--krem-gelap);flex-shrink:0;}
+    .ptab{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;color:#888;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;}
+    .ptab.active{color:var(--hijau-muda);border-color:var(--hijau-muda);}
+
+    .panel-body{flex:1;overflow-y:auto;padding:16px;}
+    .panel-section{display:none;}
+    .panel-section.active{display:block;}
+
+    .panel-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:10px;}
+
+    .btn-full{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px 14px;background:var(--hijau);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:background .15s;}
+    .btn-full:hover{background:var(--hijau-muda);}
+    .btn-outline{background:var(--krem);color:var(--hijau-tua);border:1px solid var(--krem-gelap);}
+    .btn-outline:hover{background:var(--krem-gelap);}
+    .btn-full:disabled{opacity:.6;cursor:not-allowed;}
+
+    /* Share link box */
+    .share-box{background:linear-gradient(135deg,var(--hijau-tua),var(--hijau));border-radius:12px;padding:16px;color:#fff;margin-bottom:14px;}
+    .share-box h3{font-size:13px;font-weight:600;margin-bottom:6px;}
+    .share-box p{font-size:11px;opacity:.7;margin-bottom:12px;line-height:1.5;}
+    .share-link-wrap{display:flex;gap:6px;}
+    .share-link-input{flex:1;padding:8px 10px;border-radius:6px;border:none;background:rgba(255,255,255,.15);color:#fff;font-size:11px;outline:none;}
+    .share-link-input::placeholder{color:rgba(255,255,255,.4);}
+    .btn-copy{padding:8px 12px;background:var(--hijau-terang);color:var(--hijau-tua);border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+    .btn-copy:hover{background:#52b788;}
+
+    /* Saudara cards */
+    .saudara-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+    .saudara-card{
+      background:var(--krem);border-radius:10px;padding:12px;border-left:3px solid #ddd;
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .saudara-card.aman{border-color:#22c55e;}
+    .saudara-card.waspada{border-color:#eab308;}
+    .saudara-card.bahaya{border-color:#ef4444;}
+    .saudara-card-top{display:flex;align-items:center;gap:10px;cursor:pointer;}
+    .saudara-card-top:hover .saudara-info h4{color:var(--hijau-muda);}
+    .saudara-avatar{width:36px;height:36px;border-radius:50%;background:var(--hijau-muda);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0;}
+    .saudara-info{flex:1;min-width:0;}
+    .saudara-info h4{font-size:13px;font-weight:600;color:var(--hijau-tua);transition:color .15s;}
+    .saudara-info p{font-size:11px;color:#888;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .saudara-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;flex-shrink:0;}
+    .saudara-status.aman{background:#dcfce7;color:#16a34a;}
+    .saudara-status.waspada{background:#fef9c3;color:#ca8a04;}
+    .saudara-status.bahaya{background:#fee2e2;color:#dc2626;}
+
+    .saudara-card-actions{display:flex;gap:6px;}
+    .saudara-card-actions button{flex:1;padding:6px 4px;font-size:11px;font-weight:600;border:1px solid var(--krem-gelap);background:#fff;border-radius:6px;cursor:pointer;color:#555;transition:background .15s,color .15s;}
+    .saudara-card-actions button:hover{background:var(--krem-gelap);}
+    .saudara-card-actions button.aksi-hapus:hover{background:#fee2e2;color:#dc2626;border-color:#fecaca;}
+
+    /* Tambah saudara form */
+    .form-group{margin-bottom:12px;}
+    .form-group label{font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:5px;}
+    .form-group input{width:100%;padding:8px 10px;border:1px solid var(--krem-gelap);border-radius:8px;font-size:12px;outline:none;background:var(--krem);}
+    .form-group input:focus{border-color:var(--hijau-muda);background:#fff;}
+    .form-hint{font-size:10px;color:#aaa;margin-top:-8px;margin-bottom:12px;line-height:1.5;}
+
+    .edit-banner{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#1d4ed8;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .edit-banner button{background:none;border:none;color:#1d4ed8;font-weight:700;font-size:11px;cursor:pointer;text-decoration:underline;flex-shrink:0;}
+
+    /* Status terima share */
+    .share-received{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-bottom:12px;}
+    .share-received h4{font-size:13px;font-weight:600;color:#16a34a;margin-bottom:4px;}
+    .share-received p{font-size:12px;color:#444;line-height:1.5;}
+
+    #modal-darurat,#modal-cuaca{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);align-items:center;justify-content:center;}
+    #modal-darurat.open,#modal-cuaca.open{display:flex;}
+    .modal-box{background:#fff;border-radius:16px;padding:32px;width:340px;box-shadow:0 24px 64px rgba(0,0,0,.3);max-height:85vh;overflow-y:auto;}
+    .modal-box h2{color:#dc2626;font-size:18px;margin-bottom:4px;}
+    .modal-box p{font-size:12px;color:#666;margin-bottom:20px;}
+    .darurat-list{display:flex;flex-direction:column;gap:10px;}
+    .darurat-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f8f8f8;border-radius:10px;text-decoration:none;color:#1a1a1a;font-size:13px;font-weight:500;}
+    .darurat-item:hover{background:#fee2e2;}
+    .darurat-item .d-icon{font-size:22px;}
+    .darurat-item .d-num{font-size:11px;color:#888;}
+    .modal-close{width:100%;margin-top:16px;padding:10px;background:none;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:13px;color:#666;}
+
+    /* Modal Cuaca */
+    .cuaca-head{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+    .cuaca-icon{font-size:48px;}
+    .cuaca-suhu{font-size:30px;font-weight:700;color:var(--hijau-tua);}
+    .cuaca-desk{font-size:12px;color:#777;margin-top:2px;}
+    .cuaca-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+    .cuaca-item{background:var(--krem);border-radius:10px;padding:10px;}
+    .cuaca-item .ci-label{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+    .cuaca-item .ci-val{font-size:14px;font-weight:700;color:var(--hijau-tua);}
+    .cuaca-lokasi{font-size:11px;color:#888;line-height:1.5;margin-bottom:6px;}
+    .cuaca-loading,.cuaca-error{font-size:12px;color:#999;text-align:center;padding:30px 0;}
+
+    .info-empty{font-size:12px;color:#aaa;text-align:center;padding:20px 0;line-height:1.6;}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--hijau-tua);color:#fff;padding:10px 20px;border-radius:8px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;max-width:80%;text-align:center;}
+    .toast.show{opacity:1;}
+  </style>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../assets/css/glass.css">
+</head>
+<body class="warlo-user">
+<div id="sidebar">
+  <a href="../index.html" class="sb-logo">W</a>
+  <nav class="sb-menu">
+    <a href="peta.html"     class="sb-item"><span class="sb-icon"><i class="bi bi-map-fill"></i></span><span>Peta</span></a>    <a href="saudara.html"  class="sb-item active"><span class="sb-icon"><i class="bi bi-people-fill"></i></span><span>Saudara</span></a>
+    <a href="edukasi.html"  class="sb-item"><span class="sb-icon"><i class="bi bi-book-fill"></i></span><span>Edukasi</span></a>
+  </nav>
+  <div class="sb-bottom">
+    <button class="sb-darurat" onclick="toggleDarurat()"><i class="bi bi-exclamation-octagon-fill"></i></button>
+    <a href="../index.html" class="sb-home"><i class="bi bi-house-fill"></i></a>
+  </div>
+</div>
+
+<div id="app">
+  <div id="topbar">
+    <h1><i class="bi bi-people-fill"></i> Monitor Saudara — Pantau Keamanan Keluarga</h1>
+  </div>
+  <div id="tengah">
+    <div id="map"></div>
+    <div id="panel">
+      <div class="panel-tabs">
+        <div class="ptab active" onclick="switchTab('pantau',this)"><i class="bi bi-eye-fill"></i> Pantau</div>
+        <div class="ptab" onclick="switchTab('bagikan',this)"><i class="bi bi-upload"></i> Bagikan</div>
+        <div class="ptab" onclick="switchTab('tambah',this)"><i class="bi bi-plus-circle-fill"></i> Tambah</div>
+      </div>
+      <div class="panel-body">
+
+        <!-- TAB PANTAU -->
+        <div id="tab-pantau" class="panel-section active">
+          <div id="share-received-area"></div>
+          <p class="panel-title">Daftar Saudara</p>
+          <div id="saudara-list" class="saudara-list">
+            <p class="info-empty">Belum ada saudara ditambahkan.<br>Tambahkan lewat tab <i class="bi bi-plus-circle-fill"></i> Tambah<br>atau minta mereka kirim link lokasinya.</p>
+          </div>
+        </div>
+
+        <!-- TAB BAGIKAN -->
+        <div id="tab-bagikan" class="panel-section">
+          <div class="share-box">
+            <h3><i class="bi bi-upload"></i> Bagikan Lokasi Kamu</h3>
+            <p>Kirim link ini ke saudaramu agar mereka bisa memantau apakah wilayahmu terdampak longsor.</p>
+            <div class="share-link-wrap">
+              <input class="share-link-input" id="share-link-val" readonly value="Klik tombol di bawah..." />
+              <button class="btn-copy" onclick="copyLink()">Salin</button>
+            </div>
+          </div>
+          <button class="btn-full" onclick="buatShareLink()"><i class="bi bi-geo-alt-fill"></i> Dapatkan Link Lokasiku</button>
+          <p style="font-size:11px;color:#aaa;line-height:1.6;text-align:center;">Link ini berisi koordinat GPS kamu. Siapapun yang membuka link ini akan melihat posisimu di peta WARLO.</p>
+        </div>
+
+        <!-- TAB TAMBAH -->
+        <div id="tab-tambah" class="panel-section">
+          <div id="edit-banner-area"></div>
+          <p class="panel-title" id="tambah-judul">Tambah Saudara</p>
+          <div class="form-group"><label>Nama Saudara</label><input type="text" id="inp-nama" placeholder="cth: Ayah, Ibu, Kakak..."></div>
+          
+          <!-- Search with autocomplete -->
+          <div class="form-group" style="position:relative">
+            <label>Cari Alamat / Lokasi</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="inp-alamat" placeholder="Ketik alamat..." autocomplete="off" oninput="onAlamatInput()" onkeydown="onAlamatKey(event)" style="flex:1">
+              <button onclick="clearSearch()" id="btn-clear-search" title="Hapus" style="padding:0 10px;border:1px solid var(--krem-gelap);border-radius:8px;background:var(--krem);cursor:pointer;display:none;font-size:14px;"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div id="autocomplete-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--krem-gelap);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:9999;max-height:220px;overflow-y:auto;margin-top:2px;"></div>
+          </div>
+
+          <!-- Preview lokasi terpilih -->
+          <div id="preview-lokasi" style="display:none;background:var(--krem);border-radius:10px;padding:10px 12px;margin-bottom:12px;border-left:3px solid var(--hijau-muda);">
+            <div style="font-size:11px;color:#888;margin-bottom:3px;"><i class="bi bi-geo-alt-fill"></i> Lokasi dipilih:</div>
+            <div id="preview-alamat-text" style="font-size:12px;color:var(--hijau-tua);font-weight:500;line-height:1.4;"></div>
+            <div id="preview-coords" style="font-size:10px;color:#aaa;margin-top:3px;"></div>
+          </div>
+
+          <button class="btn-full" id="btn-simpan-alamat" onclick="simpanSaudaraDariPreview()" disabled style="opacity:.5"><i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Simpan ke Daftar</button>
+          <div id="hasil-alamat"></div>
+
+          <!-- Klik peta -->
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;margin:12px 0;font-size:11px;color:#1d4ed8;">
+            <b><i class="bi bi-lightbulb-fill"></i> Klik langsung di peta</b> untuk menentukan titik lokasi saudara — lebih akurat dari ketik alamat!
+            <button id="btn-mode-klik" onclick="toggleModeKlik()" style="display:block;width:100%;margin-top:8px;padding:6px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;"><i class="bi bi-map-fill"></i> Aktifkan Mode Klik Peta</button>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--krem-gelap);margin:14px 0;">
+          <p class="panel-title">Atau tempel link yang dikirim</p>
+          <div class="form-group"><label>Link Lokasi Saudara</label><input type="text" id="inp-link" placeholder="https://...?lat=...&lon=...&nama=..."></div>
+          <button class="btn-full btn-outline" onclick="tempelLink()"><i class="bi bi-paperclip"></i> Tambah dari Link</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="modal-darurat">
+  <div class="modal-box">
+    <h2><i class="bi bi-exclamation-octagon-fill"></i> Hubungi Bantuan Darurat</h2>
+    <p>Pilih instansi yang ingin dihubungi.</p>
+    <div class="darurat-list">
+      <a href="tel:117" class="darurat-item"><span class="d-icon"><i class="bi bi-bank2"></i></span><div><div>BNPB Nasional</div><div class="d-num">117</div></div></a>
+      <a href="tel:07217773578" class="darurat-item"><span class="d-icon"><i class="bi bi-house-fill"></i></span><div><div>BPBD Lampung</div><div class="d-num">0721-773578</div></div></a>
+      <a href="tel:119" class="darurat-item"><span class="d-icon"><i class="bi bi-truck-front-fill"></i></span><div><div>Ambulans</div><div class="d-num">119</div></div></a>
+    </div>
+    <button class="modal-close" onclick="toggleDarurat()">Tutup</button>
+  </div>
+</div>
+
+<!-- MODAL CUACA -->
+<div id="modal-cuaca">
+  <div class="modal-box">
+    <h2 style="color:var(--hijau-tua);"><i class="bi bi-cloud-sun-fill"></i> Cuaca Lokasi</h2>
+    <p id="cuaca-nama-saudara">Memuat...</p>
+    <div id="cuaca-konten">
+      <div class="cuaca-loading">Mengambil data cuaca...</div>
+    </div>
+    <button class="modal-close" onclick="tutupCuaca()">Tutup</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map = L.map('map',{center:[-5.10,105.10],zoom:9});
+L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:20}).addTo(map);
+
+var daftarSaudara = JSON.parse(localStorage.getItem('warlo_saudara')||'[]');
+var daftarZonaBahaya = [];
+var markerSaudara = {};
+var editingId = null; // null = mode tambah, angka = mode edit
+
+fetch('../assets/data/lampung.geojson').then(r=>r.json()).then(d=>{
+  L.geoJson(d,{style:{color:'#2563eb',weight:2,fillOpacity:0.01}}).addTo(map);
+}).catch(()=>{});
+
+fetch('../assets/data/rawan_longsor.geojson').then(r=>r.json()).then(d=>{
+  d.features.forEach(f=>{
+    var c=f.geometry.coordinates;
+    daftarZonaBahaya.push({latlng:L.latLng(c[1],c[0]),nama:f.properties.nama_lokasi||'Kawasan Rawan'});
+    L.circle([c[1],c[0]],{radius:1000,color:'#eab308',fillColor:'#eab308',fillOpacity:.08,weight:1,dashArray:'6,6'}).addTo(map);
+  });
+  renderSaudaraList();
+}).catch(()=>{ renderSaudaraList(); });
+
+// Cek apakah URL punya parameter share (saudara kirim link)
+(function cekShareParams(){
+  var params = new URLSearchParams(window.location.search);
+  var lat = parseFloat(params.get('lat'));
+  var lon = parseFloat(params.get('lon'));
+  var nama = params.get('nama') || 'Saudara';
+  if(!isNaN(lat) && !isNaN(lon)){
+    // Ada link masuk — tanyakan apakah mau simpan
+    document.getElementById('share-received-area').innerHTML = `
+      <div class="share-received">
+        <h4><i class="bi bi-envelope-fill"></i> Link lokasi diterima!</h4>
+        <p><b>${nama}</b> berbagi lokasinya dengan kamu. Tambahkan ke daftar pantauan?</p>
+        <button class="btn-full" style="margin-top:8px" onclick="tambahDariShare(${lat},${lon},'${nama}')"><i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Tambahkan ${nama}</button>
+      </div>`;
+    map.setView([lat,lon],13);
+    L.marker([lat,lon]).addTo(map).bindPopup(`<b><i class="bi bi-geo-alt-fill"></i> ${nama}</b><br>Lokasi dibagikan`).openPopup();
+  }
+})();
+
+function tambahDariShare(lat,lon,nama){
+  tambahSaudara(nama,lat,lon,'');
+  document.getElementById('share-received-area').innerHTML='';
+  showToast('<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> '+nama+' berhasil ditambahkan!');
+}
+
+// ── GEOCODING ──
+function reverseGeocode(lat,lon){
+  var url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=0`;
+  return fetch(url,{headers:{'Accept-Language':'id','User-Agent':'WARLO-App'}})
+    .then(res=>res.json())
+    .then(data=> (data && data.display_name) ? data.display_name : '')
+    .catch(()=>'');
+}
+
+// ── AUTOCOMPLETE SEARCH ──
+var autoTimer = null;
+var selectedLokasi = null; // {lat, lon, display}
+var modeKlikAktif = false;
+var previewMarker = null;
+
+function onAlamatInput(){
+  var q = document.getElementById('inp-alamat').value.trim();
+  document.getElementById('btn-clear-search').style.display = q ? 'block' : 'none';
+  clearSelectedLokasi();
+  if(autoTimer) clearTimeout(autoTimer);
+  if(q.length < 3){ tutupDropdown(); return; }
+  document.getElementById('autocomplete-dropdown').innerHTML = '<div style="padding:10px 12px;font-size:12px;color:#999;">⏳ Mencari...</div>';
+  document.getElementById('autocomplete-dropdown').style.display='block';
+  autoTimer = setTimeout(()=>cariAutocomplete(q), 400);
+}
+
+function onAlamatKey(e){
+  var items = document.querySelectorAll('.ac-item');
+  var focused = document.querySelector('.ac-item.focused');
+  var idx = -1;
+  items.forEach((el,i)=>{ if(el===focused) idx=i; });
+  if(e.key==='ArrowDown'){ e.preventDefault(); setFocusAC(items, idx+1); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); setFocusAC(items, idx-1); }
+  else if(e.key==='Enter' && focused){ e.preventDefault(); focused.click(); }
+  else if(e.key==='Escape'){ tutupDropdown(); }
+}
+
+function setFocusAC(items, idx){
+  items.forEach(el=>el.classList.remove('focused'));
+  if(idx>=0 && idx<items.length) items[idx].classList.add('focused');
+}
+
+function cariAutocomplete(q){
+  // Bias ke Lampung/Indonesia
+  var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&countrycodes=id&viewbox=103.5,-6.5,108.5,-3.5&bounded=0&q=' + encodeURIComponent(q);
+  fetch(url, {headers:{'Accept-Language':'id','User-Agent':'WARLO-App'}})
+    .then(r=>r.json())
+    .then(data=>{
+      var dd = document.getElementById('autocomplete-dropdown');
+      if(!data || data.length===0){
+        dd.innerHTML='<div style="padding:10px 12px;font-size:12px;color:#dc2626;"><i class="bi bi-x-circle-fill" style="color:#ef4444"></i> Lokasi tidak ditemukan. Coba kata kunci lain atau klik peta langsung.</div>';
+        return;
+      }
+      dd.innerHTML = data.map((item,i)=>{
+        var name = item.display_name;
+        var short = name.split(',').slice(0,3).join(', ');
+        return `<div class="ac-item" tabindex="0"
+          onclick="pilihLokasi(${item.lat},${item.lon},'${name.replace(/'/g,"&#39;")}')"
+          style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:12px;line-height:1.4;transition:background .1s;">
+          <div style="font-weight:600;color:#1b4332;"><i class="bi bi-geo-alt-fill"></i> ${short}</div>
+          <div style="font-size:10px;color:#999;margin-top:2px;">${name}</div>
+        </div>`;
+      }).join('');
+      // hover style
+      dd.querySelectorAll('.ac-item').forEach(el=>{
+        el.addEventListener('mouseenter',()=>el.style.background='#f0fdf4');
+        el.addEventListener('mouseleave',()=>el.style.background='');
+      });
+    })
+    .catch(()=>{
+      document.getElementById('autocomplete-dropdown').innerHTML='<div style="padding:10px 12px;font-size:12px;color:#dc2626;"><i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Gagal menghubungi server. Coba klik peta langsung.</div>';
+    });
+}
+
+function pilihLokasi(lat, lon, display){
+  selectedLokasi = {lat:parseFloat(lat), lon:parseFloat(lon), display:display};
+  document.getElementById('inp-alamat').value = display.split(',').slice(0,3).join(', ');
+  tutupDropdown();
+  tampilPreview(selectedLokasi);
+  // Gerak peta ke titik
+  map.setView([selectedLokasi.lat, selectedLokasi.lon], 15);
+  pasangPreviewMarker(selectedLokasi.lat, selectedLokasi.lon);
+  enableSimpan();
+}
+
+function tutupDropdown(){
+  document.getElementById('autocomplete-dropdown').style.display='none';
+}
+
+function clearSearch(){
+  document.getElementById('inp-alamat').value='';
+  document.getElementById('btn-clear-search').style.display='none';
+  tutupDropdown();
+  clearSelectedLokasi();
+}
+
+function clearSelectedLokasi(){
+  selectedLokasi = null;
+  document.getElementById('preview-lokasi').style.display='none';
+  document.getElementById('btn-simpan-alamat').disabled = true;
+  document.getElementById('btn-simpan-alamat').style.opacity = '.5';
+  if(previewMarker){ map.removeLayer(previewMarker); previewMarker=null; }
+}
+
+function tampilPreview(lokasi){
+  document.getElementById('preview-lokasi').style.display='block';
+  document.getElementById('preview-alamat-text').textContent = lokasi.display;
+  document.getElementById('preview-coords').textContent = `${parseFloat(lokasi.lat).toFixed(6)}, ${parseFloat(lokasi.lon).toFixed(6)}`;
+}
+
+function enableSimpan(){
+  var btn = document.getElementById('btn-simpan-alamat');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+function pasangPreviewMarker(lat, lon){
+  if(previewMarker) map.removeLayer(previewMarker);
+  previewMarker = L.marker([lat,lon], {
+    icon: L.divIcon({html:'<div style="background:#2d6a4f;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)"><i class="bi bi-geo-alt-fill"></i></div>', className:'', iconAnchor:[14,14]})
+  }).addTo(map);
+}
+
+// ── MODE KLIK PETA ──
+function toggleModeKlik(){
+  modeKlikAktif = !modeKlikAktif;
+  var btn = document.getElementById('btn-mode-klik');
+  if(modeKlikAktif){
+    btn.innerHTML = '<i class="bi bi-x-circle-fill" style="color:#ef4444"></i> Nonaktifkan Mode Klik Peta';
+    btn.style.background = '#dc2626';
+    map.getContainer().style.cursor = 'crosshair';
+    showToast('<i class="bi bi-map-fill"></i> Klik pada peta untuk pilih lokasi saudara');
+  } else {
+    btn.innerHTML = '<i class="bi bi-map-fill"></i> Aktifkan Mode Klik Peta';
+    btn.style.background = '#2563eb';
+    map.getContainer().style.cursor = '';
+  }
+}
+
+map.on('click', function(e){
+  if(!modeKlikAktif) return;
+  var lat = e.latlng.lat, lon = e.latlng.lng;
+  pasangPreviewMarker(lat, lon);
+  document.getElementById('preview-lokasi').style.display='block';
+  document.getElementById('preview-alamat-text').textContent = '⏳ Mengambil nama alamat...';
+  document.getElementById('preview-coords').textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+  enableSimpan();
+  selectedLokasi = {lat:lat, lon:lon, display:''};
+
+  reverseGeocode(lat, lon).then(nama=>{
+    var display = nama || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    selectedLokasi.display = display;
+    document.getElementById('preview-alamat-text').textContent = display;
+    document.getElementById('inp-alamat').value = display.split(',').slice(0,3).join(', ');
+    document.getElementById('btn-clear-search').style.display='block';
+  });
+});
+
+// Tutup dropdown kalau klik di luar
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#inp-alamat') && !e.target.closest('#autocomplete-dropdown')){
+    tutupDropdown();
+  }
+});
+
+// ── SIMPAN SAUDARA DARI PREVIEW ──
+function simpanSaudaraDariPreview(){
+  var nama = document.getElementById('inp-nama').value.trim();
+  if(!nama){ showToast('<i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Nama saudara wajib diisi'); return; }
+  if(!selectedLokasi){ showToast('<i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Pilih lokasi dulu dari dropdown atau klik peta'); return; }
+
+  if(editingId){
+    var s = daftarSaudara.find(x=>x.id===editingId);
+    if(s){
+      s.nama   = nama;
+      s.alamat = selectedLokasi.display;
+      s.lat    = selectedLokasi.lat;
+      s.lon    = selectedLokasi.lon;
+      s.status = cekStatus(L.latLng(selectedLokasi.lat,selectedLokasi.lon));
+      simpanDataSaudara();
+      if(markerSaudara[s.id]){ map.removeLayer(markerSaudara[s.id]); delete markerSaudara[s.id]; }
+      pasangMarker(s);
+      renderSaudaraList();
+      showToast('<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Data '+nama+' berhasil diperbarui!');
+    }
+    batalEdit();
+  } else {
+    tambahSaudara(nama, selectedLokasi.lat, selectedLokasi.lon, selectedLokasi.display);
+    showToast('<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> '+nama+' ditambahkan ke peta!');
+  }
+
+  // Reset form
+  document.getElementById('inp-nama').value='';
+  clearSearch();
+  if(modeKlikAktif) toggleModeKlik();
+  if(previewMarker){ map.removeLayer(previewMarker); previewMarker=null; }
+  switchTab('pantau',document.querySelector('.ptab'));
+}
+
+// kept for compat
+function prosesFormAlamat(){ simpanSaudaraDariPreview(); }
+
+function tempelLink(){
+  var url = document.getElementById('inp-link').value.trim();
+  try{
+    var u=new URL(url);
+    var lat=parseFloat(u.searchParams.get('lat'));
+    var lon=parseFloat(u.searchParams.get('lon'));
+    var nama=u.searchParams.get('nama')||'Saudara';
+    if(isNaN(lat)||isNaN(lon)) throw 'invalid';
+    tambahSaudara(nama,lat,lon,'');
+    document.getElementById('inp-link').value='';
+    switchTab('pantau',document.querySelector('.ptab'));
+    showToast('<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> '+nama+' ditambahkan dari link!');
+  }catch(e){showToast('<i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Link tidak valid');}
+}
+
+function tambahSaudara(nama,lat,lon,alamat){
+  var latlng=L.latLng(lat,lon);
+  var status=cekStatus(latlng);
+  var obj={id:Date.now(),nama:nama,lat:lat,lon:lon,alamat:alamat||'',status:status};
+  daftarSaudara.push(obj);
+  simpanDataSaudara();
+  pasangMarker(obj);
+  renderSaudaraList();
+
+  // Jika alamat belum diketahui (misal dari link/GPS), cari nama alamatnya di belakang layar
+  if(!obj.alamat){
+    reverseGeocode(lat,lon).then(nm=>{
+      if(nm){
+        obj.alamat = nm;
+        simpanDataSaudara();
+        renderSaudaraList();
+      }
+    });
+  }
+}
+
+function simpanDataSaudara(){
+  localStorage.setItem('warlo_saudara',JSON.stringify(daftarSaudara));
+}
+
+function pasangMarker(s){
+  var warna=s.status==='bahaya'?'#ef4444':s.status==='waspada'?'#eab308':'#22c55e';
+  var m=L.circleMarker([s.lat,s.lon],{radius:10,fillColor:warna,color:'#fff',weight:2.5,fillOpacity:.95})
+    .addTo(map)
+    .bindPopup(`<b><i class="bi bi-person-circle"></i> ${s.nama}</b><br>${s.alamat?s.alamat+'<br>':''}Status: <b>${s.status.toUpperCase()}</b>`);
+  markerSaudara[s.id]=m;
+}
+
+function cekStatus(latlng){
+  var jarakMin=Infinity;
+  daftarZonaBahaya.forEach(z=>{
+    var d=latlng.distanceTo(z.latlng);
+    if(d<jarakMin) jarakMin=d;
+  });
+  return jarakMin<500?'bahaya':jarakMin<1000?'waspada':'aman';
+}
+
+function renderSaudaraList(){
+  var el=document.getElementById('saudara-list');
+  if(!daftarSaudara.length){
+    el.innerHTML='<p class="info-empty">Belum ada saudara ditambahkan.<br>Tambahkan lewat tab <i class="bi bi-plus-circle-fill"></i> Tambah<br>atau minta mereka kirim link lokasinya.</p>';
+    return;
+  }
+  el.innerHTML=daftarSaudara.map(s=>`
+    <div class="saudara-card ${s.status}">
+      <div class="saudara-card-top" onclick="fokusMarker(${s.id})">
+        <div class="saudara-avatar">${s.nama[0].toUpperCase()}</div>
+        <div class="saudara-info">
+          <h4>${s.nama}</h4>
+          <p title="${s.alamat?s.alamat.replace(/"/g,'&quot;'):''}">${s.alamat ? s.alamat : (s.lat.toFixed(4)+', '+s.lon.toFixed(4))}</p>
+        </div>
+        <span class="saudara-status ${s.status}">${s.status}</span>
+      </div>
+      <div class="saudara-card-actions">
+        <button onclick="event.stopPropagation();lihatCuaca(${s.id})"><i class="bi bi-cloud-sun-fill"></i> Cuaca</button>
+        <button onclick="event.stopPropagation();editSaudara(${s.id})"><i class="bi bi-pencil-fill"></i> Edit</button>
+        <button class="aksi-hapus" onclick="event.stopPropagation();hapusSaudara(${s.id})"><i class="bi bi-trash-fill"></i> Hapus</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function fokusMarker(id){
+  var s=daftarSaudara.find(x=>x.id===id);
+  if(s) map.setView([s.lat,s.lon],14);
+  if(markerSaudara[id]) markerSaudara[id].openPopup();
+}
+
+// ── HAPUS SAUDARA ──
+function hapusSaudara(id){
+  var s = daftarSaudara.find(x=>x.id===id);
+  if(!s) return;
+  if(!confirm('Hapus "'+s.nama+'" dari daftar pantauan?')) return;
+
+  daftarSaudara = daftarSaudara.filter(x=>x.id!==id);
+  simpanDataSaudara();
+
+  if(markerSaudara[id]){
+    map.removeLayer(markerSaudara[id]);
+    delete markerSaudara[id];
+  }
+
+  if(editingId===id) batalEdit();
+
+  renderSaudaraList();
+  showToast('<i class="bi bi-trash-fill"></i> '+s.nama+' dihapus dari daftar.');
+}
+
+// ── EDIT SAUDARA ──
+function editSaudara(id){
+  var s = daftarSaudara.find(x=>x.id===id);
+  if(!s) return;
+
+  editingId = id;
+  document.getElementById('inp-nama').value   = s.nama;
+  document.getElementById('inp-alamat').value = s.alamat || (s.lat.toFixed(6)+', '+s.lon.toFixed(6));
+  document.getElementById('hasil-alamat').innerHTML = '';
+
+  document.getElementById('tambah-judul').innerHTML = '<i class="bi bi-pencil-fill"></i> Edit Data Saudara';
+  document.getElementById('btn-simpan-alamat').innerHTML = '<i class="bi bi-save-fill"></i> Simpan Perubahan';
+  // Pre-fill selectedLokasi so save works immediately
+  selectedLokasi = {lat:s.lat, lon:s.lon, display:s.alamat||(s.lat.toFixed(6)+','+s.lon.toFixed(6))};
+  tampilPreview(selectedLokasi);
+  enableSimpan();
+  pasangPreviewMarker(s.lat, s.lon);
+  document.getElementById('edit-banner-area').innerHTML = `
+    <div class="edit-banner">
+      <span>Mengedit data: <b>${s.nama}</b></span>
+      <button onclick="batalEdit()">Batal</button>
+    </div>`;
+
+  switchTab('tambah', document.querySelectorAll('.ptab')[2]);
+}
+
+function batalEdit(){
+  editingId = null;
+  document.getElementById('inp-nama').value='';
+  clearSearch();
+  document.getElementById('hasil-alamat').innerHTML='';
+  document.getElementById('tambah-judul').textContent = 'Tambah Saudara';
+  document.getElementById('btn-simpan-alamat').innerHTML = '<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Simpan ke Daftar';
+  document.getElementById('edit-banner-area').innerHTML='';
+}
+
+// ── CUACA (Open-Meteo) ──
+function infoKodeCuaca(code){
+  var map = {
+    0:['<i class="bi bi-sun-fill" style="color:#f59e0b"></i>','Cerah'],
+    1:['<i class="bi bi-cloud-sun-fill"></i>','Cerah Berawan'],
+    2:['<i class="bi bi-cloud-sun-fill"></i>','Berawan Sebagian'],
+    3:['<i class="bi bi-cloud-fill"></i>','Berawan'],
+    45:['<i class="bi bi-cloud-haze2-fill"></i>','Berkabut'],
+    48:['<i class="bi bi-cloud-haze2-fill"></i>','Kabut Beku'],
+    51:['<i class="bi bi-cloud-sun-fill"></i>','Gerimis Ringan'],
+    53:['<i class="bi bi-cloud-sun-fill"></i>','Gerimis'],
+    55:['<i class="bi bi-cloud-rain-fill"></i>','Gerimis Lebat'],
+    56:['<i class="bi bi-cloud-rain-fill"></i>','Gerimis Beku'],
+    57:['<i class="bi bi-cloud-rain-fill"></i>','Gerimis Beku Lebat'],
+    61:['<i class="bi bi-cloud-rain-fill"></i>','Hujan Ringan'],
+    63:['<i class="bi bi-cloud-rain-fill"></i>','Hujan'],
+    65:['<i class="bi bi-cloud-lightning-rain-fill"></i>','Hujan Lebat'],
+    66:['<i class="bi bi-cloud-rain-fill"></i>','Hujan Beku'],
+    67:['<i class="bi bi-cloud-rain-fill"></i>','Hujan Beku Lebat'],
+    71:['<i class="bi bi-cloud-snow-fill"></i>','Salju Ringan'],
+    73:['<i class="bi bi-cloud-snow-fill"></i>','Salju'],
+    75:['<i class="bi bi-snow"></i>','Salju Lebat'],
+    77:['<i class="bi bi-snow"></i>','Butiran Salju'],
+    80:['<i class="bi bi-cloud-sun-fill"></i>','Hujan Lokal Ringan'],
+    81:['<i class="bi bi-cloud-rain-fill"></i>','Hujan Lokal'],
+    82:['<i class="bi bi-cloud-lightning-rain-fill"></i>','Hujan Lokal Lebat'],
+    85:['<i class="bi bi-cloud-snow-fill"></i>','Hujan Salju Ringan'],
+    86:['<i class="bi bi-snow"></i>','Hujan Salju Lebat'],
+    95:['<i class="bi bi-cloud-lightning-rain-fill"></i>','Badai Petir'],
+    96:['<i class="bi bi-cloud-lightning-rain-fill"></i>','Badai Petir + Es Ringan'],
+    99:['<i class="bi bi-cloud-lightning-rain-fill"></i>','Badai Petir + Es Lebat']
+  };
+  return map[code] || ['<i class="bi bi-thermometer-half"></i>','Tidak diketahui'];
+}
+
+function lihatCuaca(id){
+  var s = daftarSaudara.find(x=>x.id===id);
+  if(!s) return;
+
+  document.getElementById('cuaca-nama-saudara').innerHTML = '<i class="bi bi-person-circle"></i> '+s.nama + (s.alamat ? ' — '+s.alamat : '');
+  document.getElementById('cuaca-konten').innerHTML = '<div class="cuaca-loading">Mengambil data cuaca...</div>';
+  document.getElementById('modal-cuaca').classList.add('open');
+
+  var url = `https://api.open-meteo.com/v1/forecast?latitude=${s.lat}&longitude=${s.lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&timezone=Asia%2FJakarta`;
+
+  fetch(url).then(r=>r.json()).then(data=>{
+    var c = data.current;
+    if(!c){ throw 'no data'; }
+    var info = infoKodeCuaca(c.weather_code);
+    var waktu = new Date(c.time).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});
+
+    document.getElementById('cuaca-konten').innerHTML = `
+      <div class="cuaca-head">
+        <div class="cuaca-icon">${info[0]}</div>
+        <div>
+          <div class="cuaca-suhu">${Math.round(c.temperature_2m)}°C</div>
+          <div class="cuaca-desk">${info[1]}</div>
+        </div>
+      </div>
+      <div class="cuaca-grid">
+        <div class="cuaca-item"><div class="ci-label">Kelembapan</div><div class="ci-val">${c.relative_humidity_2m}%</div></div>
+        <div class="cuaca-item"><div class="ci-label">Angin</div><div class="ci-val">${c.wind_speed_10m} km/j</div></div>
+        <div class="cuaca-item"><div class="ci-label">Curah Hujan</div><div class="ci-val">${c.precipitation} mm</div></div>
+        <div class="cuaca-item"><div class="ci-label">Status Longsor</div><div class="ci-val" style="color:${s.status==='bahaya'?'#dc2626':s.status==='waspada'?'#ca8a04':'#16a34a'}">${s.status.toUpperCase()}</div></div>
+      </div>
+      <div class="cuaca-lokasi"><i class="bi bi-geo-alt-fill"></i> ${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}<br><i class="bi bi-clock-fill"></i> Update: ${waktu} WIB</div>
+      ${(c.precipitation>10 || s.status!=='aman') ? '<p style="font-size:11px;color:#dc2626;background:#fee2e2;padding:8px 10px;border-radius:8px;"><i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Cuaca/lokasi berisiko — sebaiknya hubungi saudara untuk memastikan keadaan mereka.</p>' : ''}
+    `;
+  }).catch(()=>{
+    document.getElementById('cuaca-konten').innerHTML = '<div class="cuaca-error"><i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Gagal mengambil data cuaca. Coba lagi nanti.</div>';
+  });
+}
+
+function tutupCuaca(){
+  document.getElementById('modal-cuaca').classList.remove('open');
+}
+
+// Inisialisasi marker yang sudah tersimpan
+daftarSaudara.forEach(pasangMarker);
+
+// ── SHARE LINK ──
+function buatShareLink(){
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      var lat=pos.coords.latitude.toFixed(6);
+      var lon=pos.coords.longitude.toFixed(6);
+      var nama=prompt('Namamu (untuk ditampilkan ke saudara):','Saya')||'Saya';
+      var link=`${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}&nama=${encodeURIComponent(nama)}`;
+      document.getElementById('share-link-val').value=link;
+    },()=>{ showToast('Tidak bisa ambil GPS. Coba masukkan koordinat manual.'); });
+  } else { showToast('Browser tidak mendukung GPS.'); }
+}
+
+function copyLink(){
+  var val=document.getElementById('share-link-val').value;
+  navigator.clipboard.writeText(val).then(()=>showToast('<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Link disalin!')).catch(()=>{
+    document.getElementById('share-link-val').select();
+    document.execCommand('copy');
+    showToast('<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Link disalin!');
+  });
+}
+
+function switchTab(name,el){
+  document.querySelectorAll('.panel-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function toggleDarurat(){document.getElementById('modal-darurat').classList.toggle('open');}
+</script>
+</body>
+</html>

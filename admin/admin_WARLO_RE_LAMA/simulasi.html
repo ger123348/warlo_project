@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Simulasi Risiko — WARLO Admin</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--hijau-tua:#1b4332;--hijau:#2d6a4f;--hijau-muda:#40916c;--hijau-terang:#74c69d;--krem:#f8f3ec;--krem-gelap:#ede5d8;}
+    body{display:flex;height:100vh;overflow:hidden;font-family:'Inter',sans-serif;background:#f1f5f4;}
+
+    /* SIDEBAR */
+    #sidebar{width:220px;background:var(--hijau-tua);display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;box-shadow:2px 0 16px rgba(0,0,0,.2);}
+    .sb-brand{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .sb-brand .logo{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#fff;letter-spacing:-1px;}
+    .sb-brand .sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+    .sb-brand .badge{display:inline-block;margin-top:8px;background:#ef4444;color:#fff;font-size:9px;padding:2px 8px;border-radius:100px;font-weight:600;}
+    .sb-section{padding:16px 12px 8px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);}
+    .sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:0 8px;border-radius:8px;text-decoration:none;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;transition:all .15s;}
+    .sb-item .icon{font-size:16px;width:20px;text-align:center;}
+    .sb-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+    .sb-item.active{background:var(--hijau-muda);color:#fff;}
+    .sb-item .badge-num{margin-left:auto;background:#ef4444;color:#fff;font-size:9px;padding:1px 6px;border-radius:100px;font-weight:700;}
+    .sb-bottom{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
+    .sb-user{display:flex;align-items:center;gap:10px;padding:10px 8px;color:rgba(255,255,255,.7);font-size:12px;}
+    .sb-avatar{width:32px;height:32px;border-radius:50%;background:var(--hijau-muda);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;}
+    .sb-user-info .name{font-weight:600;color:#fff;}
+    .sb-user-info .role{font-size:10px;color:rgba(255,255,255,.4);}
+    .btn-user-web{display:flex;align-items:center;gap:6px;margin:0 8px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:11px;text-decoration:none;}
+    .btn-user-web:hover{background:rgba(255,255,255,.12);color:#fff;}
+
+    /* MAIN */
+    #main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    #topbar{height:56px;background:#fff;border-bottom:1px solid #e8ede9;display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0;}
+    #topbar h1{font-size:15px;font-weight:700;color:var(--hijau-tua);flex:1;}
+    #topbar span{font-size:12px;color:#888;}
+
+    #content{flex:1;display:flex;overflow:hidden;}
+    #map{flex:1;position:relative;}
+
+    /* ── SEARCH BOX (GOOGLE MAPS STYLE) ── */
+    #search-container{
+      position:absolute;top:14px;left:50%;transform:translateX(-50%);
+      z-index:1000;width:400px;
+    }
+    #search-wrapper{
+      background:#fff;border-radius:12px;
+      box-shadow:0 4px 20px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    #search-row{display:flex;align-items:center;padding:0 14px;gap:8px;height:46px;}
+    #search-icon{font-size:18px;color:#888;flex-shrink:0;}
+    #search-input{
+      flex:1;border:none;outline:none;font-size:14px;
+      font-family:'Inter',sans-serif;color:#333;background:transparent;
+    }
+    #search-input::placeholder{color:#aaa;}
+    #search-clear{
+      background:none;border:none;cursor:pointer;font-size:16px;color:#aaa;
+      padding:4px;border-radius:50%;display:none;flex-shrink:0;
+    }
+    #search-clear:hover{background:#f5f5f5;color:#555;}
+    #search-spinner{
+      width:18px;height:18px;border:2px solid #e5e5e5;border-top-color:var(--hijau-muda);
+      border-radius:50%;animation:spin .6s linear infinite;display:none;flex-shrink:0;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #search-results{
+      border-top:1px solid #f0f0f0;max-height:260px;overflow-y:auto;
+      display:none;
+    }
+    .search-result-item{
+      display:flex;align-items:center;gap:12px;
+      padding:10px 14px;cursor:pointer;transition:background .12s;
+    }
+    .search-result-item:hover{background:#f8f8f8;}
+    .sr-icon{font-size:18px;flex-shrink:0;}
+    .sr-text .sr-main{font-size:13px;font-weight:500;color:#333;}
+    .sr-text .sr-sub{font-size:11px;color:#aaa;margin-top:1px;}
+    .search-no-result{padding:16px 14px;text-align:center;font-size:12px;color:#aaa;}
+
+    /* PANEL */
+    #panel{width:380px;background:#fff;border-left:1px solid #e8ede9;overflow-y:auto;padding:0;flex-shrink:0;}
+    .panel-head{padding:16px 20px;border-bottom:1px solid #f0f0f0;background:var(--hijau-tua);}
+    .panel-head h3{font-size:14px;font-weight:700;color:#fff;}
+    .panel-head p{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;line-height:1.4;}
+    .panel-tabs{display:flex;border-bottom:1px solid #e8ede9;background:#fafafa;}
+    .ptab{flex:1;padding:11px 6px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;color:#888;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;}
+    .ptab.active{color:var(--hijau-muda);border-color:var(--hijau-muda);background:#fff;}
+    .tab-section{display:none;padding:20px;}
+    .tab-section.active{display:block;}
+
+    /* STATUS MEGA */
+    .status-mega{border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;}
+    .status-mega.aman{background:linear-gradient(135deg,#14532d,#16a34a);}
+    .status-mega.waspada{background:linear-gradient(135deg,#713f12,#ca8a04);}
+    .status-mega.bahaya{background:linear-gradient(135deg,#7f1d1d,#dc2626);}
+    .status-mega .level{font-size:28px;font-weight:900;color:#fff;font-family:'Playfair Display',serif;}
+    .status-mega .skor{font-size:13px;color:rgba(255,255,255,.7);margin-top:4px;}
+    .status-mega .rekomen{font-size:11px;color:rgba(255,255,255,.85);margin-top:8px;line-height:1.5;}
+
+    /* FAKTOR */
+    .section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#888;margin:0 0 12px;}
+    .faktor-group{margin-bottom:16px;}
+    .faktor-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+    .faktor-label{font-size:12px;font-weight:600;color:var(--hijau-tua);}
+    .faktor-val{font-size:13px;font-weight:700;color:var(--hijau-muda);}
+    .faktor-range{width:100%;accent-color:var(--hijau-muda);cursor:pointer;}
+    .bobot-bar{height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin:5px 0;}
+    .bobot-fill{height:100%;border-radius:3px;transition:width .4s,background .4s;}
+    .faktor-desc{font-size:10px;color:#aaa;line-height:1.4;}
+    .form-input{width:100%;padding:8px 10px;border:1px solid #e5e5e5;border-radius:8px;font-size:12px;background:#fafafa;color:#333;outline:none;transition:border .15s;}
+    .form-input:focus{border-color:var(--hijau-muda);background:#fff;}
+    select.form-input{cursor:pointer;}
+    .bobot-total{margin-top:14px;padding:12px 14px;background:var(--hijau-tua);border-radius:10px;display:flex;align-items:center;justify-content:space-between;color:#fff;}
+    .bobot-total .label{font-size:11px;opacity:.7;}
+    .bobot-total .nilai{font-size:22px;font-weight:700;}
+
+    /* TAMBAH TITIK */
+    .tambah-form{border:1px solid #e8ede9;border-radius:12px;overflow:hidden;margin-bottom:14px;}
+    .tambah-form-head{background:#f8f8f8;padding:10px 14px;font-size:12px;font-weight:700;color:#333;border-bottom:1px solid #e8ede9;}
+    .tambah-form-body{padding:14px;}
+    .form-field{margin-bottom:12px;}
+    .form-field label{display:block;font-size:11px;font-weight:600;color:#555;margin-bottom:4px;}
+
+    /* KOORDINAT DISPLAY */
+    .koordinat-box{
+      background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;
+      padding:10px 12px;font-size:11px;color:#14532d;margin-bottom:12px;
+      cursor:pointer;transition:background .15s;
+    }
+    .koordinat-box:hover{background:#dcfce7;}
+    .koordinat-box b{display:block;font-size:12px;margin-bottom:2px;}
+    .koordinat-box.belum{background:#fafafa;border-color:#e5e5e5;color:#888;cursor:default;}
+    .koordinat-box.belum:hover{background:#fafafa;}
+
+    /* TITIK LIST */
+    .titik-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;}
+    .titik-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;border:1px solid #f0f0f0;font-size:12px;}
+    .titik-item.rawan{background:#fef2f2;border-color:#fecaca;}
+    .titik-item.balai{background:#fefce8;border-color:#fde68a;}
+    .titik-nama{flex:1;font-weight:500;color:#333;}
+    .titik-badge{font-size:9px;padding:2px 7px;border-radius:100px;font-weight:700;}
+    .titik-badge.rawan{background:#ef4444;color:#fff;}
+    .titik-badge.balai{background:#ca8a04;color:#fff;}
+    .btn-hapus{background:none;border:none;cursor:pointer;font-size:14px;color:#aaa;padding:2px 4px;border-radius:4px;}
+    .btn-hapus:hover{background:#fee2e2;color:#dc2626;}
+    .titik-empty{font-size:11px;color:#aaa;text-align:center;padding:16px;background:#fafafa;border-radius:8px;}
+
+    /* BUTTONS */
+    .btn-primary{width:100%;padding:11px;background:var(--hijau-muda);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;transition:background .15s;}
+    .btn-primary:hover{background:var(--hijau);}
+    .btn-secondary{width:100%;padding:9px;background:none;border:1px solid #e5e5e5;border-radius:8px;font-size:12px;cursor:pointer;color:#666;margin-top:6px;}
+    .btn-secondary:hover{background:#f5f5f5;}
+    .btn-danger{width:100%;padding:10px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .btn-danger:hover{background:#b91c1c;}
+
+    /* LOG */
+    .log-list{display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:200px;overflow-y:auto;}
+    .log-item{padding:8px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:11px;color:#14532d;}
+    .log-item.warn{background:#fefce8;border-color:#fde68a;color:#713f12;}
+    .log-item.danger{background:#fee2e2;border-color:#fecaca;color:#7f1d1d;}
+    .log-item.info{background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;}
+
+    /* MAP HINT */
+    .map-hint{
+      position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+      background:rgba(27,67,50,.85);color:#fff;padding:8px 18px;
+      border-radius:100px;font-size:11px;pointer-events:none;z-index:400;
+      white-space:nowrap;transition:all .3s;
+    }
+    .map-hint.mode-aktif{
+      background:rgba(220,38,38,.9);
+      animation:dpulse 1.5s infinite;
+    }
+    @keyframes dpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4);}50%{box-shadow:0 0 0 10px rgba(220,38,38,0);}}
+
+
+    /* LUAS PREDIKSI */
+    .luas-box{background:#fff8e1;border:1px solid #ffc107;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:12px;}
+    .luas-box h4{font-weight:700;color:#856404;margin-bottom:6px;font-size:12px;}
+    .luas-box .luas-val{font-size:24px;font-weight:800;color:#ca8a04;line-height:1;}
+    .luas-box .luas-sub{font-size:10px;color:#aaa;margin-top:3px;}
+    .warning-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;margin-bottom:10px;}
+    .warning-badge.bahaya{background:#fee2e2;color:#dc2626;}
+    .warning-badge.waspada{background:#fef9c3;color:#ca8a04;}
+    .warning-badge.aman{background:#dcfce7;color:#16a34a;}
+    .titik-selected{background:#eff6ff;border:2px solid #3b82f6;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;}
+    .titik-selected .ts-nama{font-weight:700;color:#1e3a8a;}
+    .titik-selected .ts-sub{font-size:10px;color:#6b7280;margin-top:2px;}
+    .titik-selected .ts-coord{font-size:9px;color:#aaa;font-family:monospace;margin-top:2px;}
+    .radius-info{font-size:11px;color:#6b7280;line-height:1.5;margin-top:6px;padding:7px 10px;background:#f8fafc;border-radius:8px;}
+
+    /* SELECTED PLACE CARD */
+    #place-card{
+      display:none;
+      position:absolute;bottom:56px;left:50%;transform:translateX(-50%);
+      background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);
+      padding:14px 18px;z-index:500;width:380px;
+      border-left:4px solid var(--hijau-muda);
+    }
+    #place-card.show{display:flex;align-items:center;gap:12px;}
+    #place-card .pc-icon{font-size:22px;flex-shrink:0;}
+    #place-card .pc-info{flex:1;}
+    #place-card .pc-nama{font-size:13px;font-weight:700;color:var(--hijau-tua);}
+    #place-card .pc-coord{font-size:10px;color:#aaa;font-family:monospace;margin-top:2px;}
+    #place-card .pc-btn{
+      padding:7px 14px;background:var(--hijau-muda);color:#fff;border:none;
+      border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;
+    }
+    #place-card .pc-btn:hover{background:var(--hijau);}
+    #place-card .pc-close{
+      background:none;border:none;cursor:pointer;color:#aaa;font-size:16px;
+      padding:2px 6px;flex-shrink:0;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../assets/css/glass.css">
+</head>
+<body class="warlo-admin">
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-brand">
+    <div class="logo">WARLO</div>
+    <div class="sub">Admin Panel</div>
+    <div class="badge">● LIVE</div>
+  </div>
+  <div class="sb-section">Menu Utama</div>
+  <a href="dashboard.html" class="sb-item"><span class="icon"><i class="bi bi-bar-chart-fill"></i></span> Dashboard</a>
+  <a href="longsor.html"   class="sb-item"><span class="icon"><i class="bi bi-triangle-fill"></i></span> Monitoring Longsor <span class="badge-num">0</span></a>
+  <a href="pengguna.html"  class="sb-item"><span class="icon"><i class="bi bi-people-fill"></i></span> Pengguna Terdampak</a>
+  <a href="simulasi.html"  class="sb-item active"><span class="icon"><i class="bi bi-gear-fill"></i></span> Simulasi Risiko</a>
+  <div class="sb-section">Lainnya</div>
+  <a href="../user/peta.html" class="btn-user-web"><i class="bi bi-map-fill"></i> Buka Halaman User</a>
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar">A</div>
+      <div class="sb-user-info">
+        <div class="name">Admin BPBD</div>
+        <div class="role">Provinsi Lampung</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <h1><i class="bi bi-gear-fill"></i> Simulasi Faktor Risiko Longsor</h1>
+    <span>Faktor yang diterapkan langsung memengaruhi status di peta user</span>
+  </div>
+
+  <div id="content">
+
+    <!-- PETA -->
+    <div id="map">
+
+      <!-- SEARCH BOX GOOGLE MAPS STYLE -->
+      <div id="search-container">
+        <div id="search-wrapper">
+          <div id="search-row">
+            <span id="search-icon"><i class="bi bi-search"></i></span>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Cari alamat atau nama tempat di Lampung..."
+              autocomplete="off"
+              oninput="onSearchInput(this.value)"
+              onkeydown="onSearchKey(event)"
+            />
+            <div id="search-spinner"></div>
+            <button id="search-clear" onclick="clearSearch()" title="Hapus"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <div id="search-results"></div>
+        </div>
+      </div>
+
+      <!-- PLACE CARD (muncul setelah pilih hasil) -->
+      <div id="place-card">
+        <span class="pc-icon"><i class="bi bi-geo-alt-fill"></i></span>
+        <div class="pc-info">
+          <div class="pc-nama" id="pc-nama">—</div>
+          <div class="pc-coord" id="pc-coord">—</div>
+        </div>
+        <button class="pc-btn" onclick="pakaiLokasiIni()"><i class="bi bi-plus-circle-fill"></i> Pakai Lokasi Ini</button>
+        <button class="pc-close" onclick="tutupPlaceCard()" title="Tutup"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <!-- MAP HINT -->
+      <div class="map-hint" id="map-hint"><i class="bi bi-map-fill"></i> Cari alamat di kotak pencarian, atau klik langsung di peta</div>
+
+    </div>
+
+    <!-- PANEL KANAN -->
+    <div id="panel">
+      <div class="panel-head">
+        <h3><i class="bi bi-gear-fill"></i> Panel Simulasi & Manajemen Titik</h3>
+        <p>Hitung indeks risiko dan kelola data titik rawan serta balai evakuasi.</p>
+      </div>
+
+      <div class="panel-tabs">
+        <div class="ptab active" onclick="switchTab('faktor',this)"><i class="bi bi-bar-chart-fill"></i> Faktor</div>
+        <div class="ptab" onclick="switchTab('titik',this)"><i class="bi bi-geo-alt-fill"></i> Titik DB</div>
+        <div class="ptab" onclick="switchTab('log',this)"><i class="bi bi-clipboard-fill"></i> Log</div>
+      </div>
+
+      <!-- TAB FAKTOR -->
+      <div id="tab-faktor" class="tab-section active">
+        <div id="status-mega" class="status-mega aman">
+          <div class="level" id="level-text"><i class="bi bi-check-circle-fill" style="color:#22c55e"></i> AMAN</div>
+          <div class="skor" id="skor-text">Indeks Risiko: 0 / 100</div>
+          <div class="rekomen" id="rekomen-text">Atur faktor di bawah untuk menghitung indeks risiko.</div>
+        </div>
+
+        <div class="section-title">6 FAKTOR RISIKO</div>
+
+        <div class="faktor-group">
+          <div class="faktor-header"><span class="faktor-label"><i class="bi bi-cloud-rain-fill"></i> Curah Hujan</span><span class="faktor-val" id="v-hujan">0 mm/jam</span></div>
+          <input type="range" class="faktor-range" id="sl-hujan" min="0" max="100" value="0" oninput="update()">
+          <div class="bobot-bar"><div class="bobot-fill" id="b-hujan"></div></div>
+          <div class="faktor-desc">Bobot 25% · Ambang bahaya: &gt;50 mm/jam</div>
+        </div>
+
+        <div class="faktor-group">
+          <div class="faktor-header"><span class="faktor-label"><i class="bi bi-droplet-fill"></i> Kelembaban Tanah</span><span class="faktor-val" id="v-humid">60%</span></div>
+          <input type="range" class="faktor-range" id="sl-humid" min="0" max="100" value="60" oninput="update()">
+          <div class="bobot-bar"><div class="bobot-fill" id="b-humid"></div></div>
+          <div class="faktor-desc">Bobot 15% · Ambang bahaya: &gt;80%</div>
+        </div>
+
+        <div class="faktor-group">
+          <div class="faktor-header"><span class="faktor-label"><i class="bi bi-triangle-fill"></i> Kemiringan Lereng</span><span class="faktor-val" id="v-lereng">20°</span></div>
+          <input type="range" class="faktor-range" id="sl-lereng" min="0" max="90" value="20" oninput="update()">
+          <div class="bobot-bar"><div class="bobot-fill" id="b-lereng"></div></div>
+          <div class="faktor-desc">Bobot 20% · Lereng &gt;30° sangat rawan</div>
+        </div>
+
+        <div class="faktor-group">
+          <div class="faktor-header"><span class="faktor-label"><i class="bi bi-tree-fill"></i> Tutupan Lahan</span><span class="faktor-val" id="v-lahan">Perkebunan</span></div>
+          <select id="sl-lahan" class="form-input" style="margin-bottom:4px;" onchange="update()">
+            <option value="5">Hutan Lebat (risiko rendah)</option>
+            <option value="10">Hutan Sekunder / Semak</option>
+            <option value="15" selected>Perkebunan / Ladang</option>
+            <option value="20">Lahan Kosong / Terbuka</option>
+            <option value="25">Permukiman Padat</option>
+          </select>
+          <div class="faktor-desc">Bobot 15% · Lahan terbuka meningkatkan risiko erosi</div>
+        </div>
+
+        <div class="faktor-group">
+          <div class="faktor-header"><span class="faktor-label"><i class="bi bi-circle-fill"></i> Jenis Tanah</span><span class="faktor-val" id="v-tanah">Lempung</span></div>
+          <select id="sl-tanah" class="form-input" style="margin-bottom:4px;" onchange="update()">
+            <option value="3">Batuan Keras (risiko rendah)</option>
+            <option value="6">Pasir / Kerikil</option>
+            <option value="10" selected>Lempung / Tanah Merah</option>
+            <option value="14">Tanah Gambut</option>
+            <option value="18">Tanah Labil / Pasir Jenuh</option>
+          </select>
+          <div class="faktor-desc">Bobot 15% · Tanah lempung jenuh air paling rentan longsor</div>
+        </div>
+
+        <div class="faktor-group">
+          <div class="faktor-header"><span class="faktor-label"><i class="bi bi-file-text-fill"></i> Histori Kejadian</span><span class="faktor-val" id="v-histori">Tidak Ada</span></div>
+          <select id="sl-histori" class="form-input" style="margin-bottom:4px;" onchange="update()">
+            <option value="0" selected>Tidak Ada Riwayat</option>
+            <option value="3">1–2 kejadian (&gt;10 tahun lalu)</option>
+            <option value="6">Beberapa kejadian (5–10 tahun)</option>
+            <option value="8">Sering terjadi (&lt;5 tahun)</option>
+            <option value="10">Sangat sering / zona aktif</option>
+          </select>
+          <div class="faktor-desc">Bobot 10% · Zona dengan riwayat longsor berisiko lebih tinggi</div>
+        </div>
+
+        <div class="bobot-total">
+          <div><div class="label">Total Indeks Risiko</div><div style="font-size:9px;opacity:.4;margin-top:2px">100 = bahaya maksimum</div></div>
+          <div class="nilai" id="nilai-total">0<span style="font-size:12px;opacity:.5">/100</span></div>
+        </div>
+
+
+        <!-- LUAS PREDIKSI LONGSOR -->
+        <div id="luas-prediksi" class="luas-box" style="display:none">
+          <h4><i class="bi bi-bounding-box"></i> Estimasi Luas Terdampak</h4>
+          <div class="luas-val" id="luas-val">—</div>
+          <div class="luas-sub" id="luas-sub">hektar area berisiko</div>
+          <div class="radius-info" id="radius-info">—</div>
+        </div>
+
+        <!-- INFO TITIK YANG DIPILIH -->
+        <div id="titik-selected-info" style="display:none;margin-top:10px;" class="titik-selected">
+          <div class="ts-nama" id="ts-nama">—</div>
+          <div class="ts-sub">Titik yang akan diperbarui di database</div>
+          <div class="ts-coord" id="ts-coord">—</div>
+        </div>
+
+        <button class="btn-primary" onclick="terapkanSimulasi()"><i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Terapkan & Simpan ke DB</button>
+        <button class="btn-secondary" onclick="resetFaktor()"><i class="bi bi-arrow-counterclockwise"></i> Reset Faktor</button>
+        <button class="btn-danger" onclick="broadcastDarurat()"><i class="bi bi-broadcast" style="color:#ef4444"></i> Broadcast Alert Darurat</button>
+      </div>
+
+      <!-- TAB TITIK DB -->
+      <div id="tab-titik" class="tab-section">
+        <div class="section-title">TAMBAH TITIK KE DATABASE</div>
+
+        <div class="tambah-form">
+          <div class="tambah-form-head"><i class="bi bi-pin-angle-fill"></i> Input Titik Rawan / Balai Evakuasi</div>
+          <div class="tambah-form-body">
+
+            <!-- Koordinat terpilih (dari search atau klik peta) -->
+            <div id="koordinat-box" class="koordinat-box belum">
+              <b><i class="bi bi-geo-alt-fill"></i> Koordinat Belum Dipilih</b>
+              Cari alamat di kotak pencarian peta, atau klik langsung di peta.
+            </div>
+
+            <div class="form-field">
+              <label>Nama Lokasi</label>
+              <input type="text" id="inp-nama" class="form-input" placeholder="Contoh: Desa Sukaraja, Lereng Bukit Barisan">
+            </div>
+            <div class="form-field">
+              <label>Kategori</label>
+              <select id="inp-jenis" class="form-input">
+                <option value="rawan">Rawan Longsor</option>
+                <option value="balai">Balai Evakuasi</option>
+              </select>
+            </div>
+
+            <p style="font-size:11px;color:#888;margin-bottom:10px;line-height:1.5;">
+              <i class="bi bi-lightbulb-fill"></i> <b>Cara pilih lokasi:</b> Cari nama tempat di kotak pencarian peta, lalu klik <b>"Pakai Lokasi Ini"</b>. Atau klik langsung titik di peta.
+            </p>
+
+            <button class="btn-primary" onclick="simpanTitik()"><i class="bi bi-save-fill"></i> Simpan ke Database</button>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:4px;">
+          DATA TITIK DI DATABASE
+          <span id="badge-count" style="background:#e5e7eb;color:#555;padding:2px 8px;border-radius:100px;font-size:10px;margin-left:6px;font-weight:600;">…</span>
+        </div>
+        <div id="titik-list" class="titik-list">
+          <div class="titik-empty">Memuat data dari server...</div>
+        </div>
+        <button class="btn-secondary" onclick="muatDataDB()" style="margin-top:10px;"><i class="bi bi-arrow-repeat"></i> Refresh Data</button>
+      </div>
+
+      <!-- TAB LOG -->
+      <div id="tab-log" class="tab-section">
+        <div class="section-title">RIWAYAT AKTIVITAS</div>
+        <div id="log-sim" class="log-list">
+          <div class="log-item info">⏳ Sistem siap. Belum ada aktivitas.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API_BASE = 'http://localhost:3000';
+
+// ── PETA ──
+var map = L.map('map',{center:[-5.10,105.10],zoom:9});
+L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:20}).addTo(map);
+fetch('../assets/data/lampung.geojson').then(r=>r.json()).then(d=>{
+  L.geoJson(d,{style:{color:'#2563eb',weight:2,fillOpacity:0.01}}).addTo(map);
+}).catch(()=>{});
+
+// ── STATE ──
+var koordinatDipilih = null;   // {lat, lng, nama}
+var pilihMarker      = null;
+var dbMarkers        = L.layerGroup().addTo(map);
+var searchTimeout    = null;
+var searchResults    = [];
+
+// ─────────────────────────────────────────
+// SEARCH SEPERTI GOOGLE MAPS
+// (Nominatim OpenStreetMap — gratis, no API key)
+// ─────────────────────────────────────────
+function onSearchInput(val) {
+  var clearBtn = document.getElementById('search-clear');
+  clearBtn.style.display = val.length > 0 ? 'block' : 'none';
+
+  clearTimeout(searchTimeout);
+  if (val.length < 3) {
+    tutupHasilSearch();
+    return;
+  }
+
+  // Spinner muncul
+  document.getElementById('search-spinner').style.display = 'block';
+
+  searchTimeout = setTimeout(() => {
+    cariAlamat(val);
+  }, 400);  // debounce 400ms
+}
+
+function onSearchKey(e) {
+  if (e.key === 'Escape') clearSearch();
+  if (e.key === 'Enter') {
+    var val = document.getElementById('search-input').value;
+    if (val.length >= 3) cariAlamat(val);
+  }
+}
+
+function cariAlamat(q) {
+  // Nominatim dengan viewbox Lampung agar hasil lebih relevan
+  var url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&viewbox=103.5,-3.5,106.5,-6.0&bounded=0&limit=6&accept-language=id&addressdetails=1`;
+
+  fetch(url, { headers: { 'Accept-Language': 'id' } })
+    .then(r => r.json())
+    .then(results => {
+      document.getElementById('search-spinner').style.display = 'none';
+      searchResults = results;
+      tampilkanHasilSearch(results);
+    })
+    .catch(() => {
+      document.getElementById('search-spinner').style.display = 'none';
+      document.getElementById('search-results').style.display = 'block';
+      document.getElementById('search-results').innerHTML =
+        '<div class="search-no-result"><i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Gagal memuat hasil. Periksa koneksi internet.</div>';
+    });
+}
+
+function tampilkanHasilSearch(results) {
+  var container = document.getElementById('search-results');
+  if (results.length === 0) {
+    container.style.display = 'block';
+    container.innerHTML = '<div class="search-no-result"><i class="bi bi-emoji-frown"></i> Lokasi tidak ditemukan. Coba kata kunci lain.</div>';
+    return;
+  }
+
+  container.style.display = 'block';
+  container.innerHTML = results.map((r, i) => {
+    // Tentukan icon berdasarkan tipe
+    var icon = r.type === 'administrative' ? '<i class="bi bi-bank2"></i>' :
+               r.class === 'highway' ? '<i class="bi bi-signpost-2-fill"></i>' :
+               r.class === 'amenity' ? '<i class="bi bi-building"></i>' :
+               r.class === 'natural' ? '<i class="bi bi-flower1"></i>' : '<i class="bi bi-geo-alt-fill"></i>';
+
+    var namaUtama = r.name || r.display_name.split(',')[0];
+    var alamatSub = r.display_name;
+
+    return `<div class="search-result-item" onclick="pilihHasilSearch(${i})">
+      <span class="sr-icon">${icon}</span>
+      <div class="sr-text">
+        <div class="sr-main">${namaUtama}</div>
+        <div class="sr-sub">${alamatSub}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function pilihHasilSearch(idx) {
+  var r    = searchResults[idx];
+  var lat  = parseFloat(r.lat);
+  var lng  = parseFloat(r.lon);
+  var nama = r.name || r.display_name.split(',')[0];
+
+  // Tutup dropdown
+  tutupHasilSearch();
+  document.getElementById('search-input').value = nama;
+  document.getElementById('search-clear').style.display = 'block';
+
+  // Pan & zoom ke lokasi
+  map.setView([lat, lng], 14);
+
+  // Set koordinat terpilih
+  setKoordinat(lat, lng, nama, r.display_name);
+}
+
+function tutupHasilSearch() {
+  document.getElementById('search-results').style.display = 'none';
+  document.getElementById('search-spinner').style.display = 'none';
+}
+
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  tutupHasilSearch();
+}
+
+// Tutup dropdown kalau klik di luar
+document.addEventListener('click', function(e) {
+  var container = document.getElementById('search-container');
+  if (!container.contains(e.target)) tutupHasilSearch();
+});
+
+// ─────────────────────────────────────────
+// KLIK LANGSUNG DI PETA → pilih koordinat
+// (selalu aktif, tidak perlu toggle mode)
+// ─────────────────────────────────────────
+map.on('click', function(e) {
+  var lat = e.latlng.lat;
+  var lng = e.latlng.lng;
+
+  // Reverse geocode untuk dapat nama lokasi
+  var url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=id`;
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      var nama = data.name || data.address?.village || data.address?.suburb ||
+                 data.address?.city || data.address?.county || 'Lokasi Dipilih';
+      setKoordinat(lat, lng, nama, data.display_name);
+    })
+    .catch(() => {
+      setKoordinat(lat, lng, 'Lokasi Dipilih', `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    });
+});
+
+function setKoordinat(lat, lng, nama, displayName) {
+  koordinatDipilih = { lat, lng, nama };
+
+  // Marker di peta
+  if (pilihMarker) map.removeLayer(pilihMarker);
+  pilihMarker = L.marker([lat, lng], {
+    icon: L.divIcon({
+      html: `<div style="position:relative">
+        <div style="width:18px;height:18px;background:#8b5cf6;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>
+        <div style="position:absolute;top:-2px;left:-2px;width:22px;height:22px;border:2px solid #8b5cf6;border-radius:50%;animation:pulse-ring 1.5s ease-out infinite;"></div>
+      </div>`,
+      iconSize: [18, 18], iconAnchor: [9, 9], className: ''
+    })
+  }).addTo(map).bindPopup(`<b><i class="bi bi-geo-alt-fill"></i> ${nama}</b><br><small>${lat.toFixed(5)}, ${lng.toFixed(5)}</small>`).openPopup();
+
+  // Update koordinat box di panel Titik
+  var box = document.getElementById('koordinat-box');
+  box.className = 'koordinat-box';
+  box.innerHTML = `<b><i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Koordinat Dipilih</b>${nama}<br><span style="font-family:monospace;font-size:10px">Lat: ${lat.toFixed(6)} | Lng: ${lng.toFixed(6)}</span>`;
+
+  // Isi nama otomatis di input jika masih kosong
+  var inpNama = document.getElementById('inp-nama');
+  if (!inpNama.value.trim()) inpNama.value = nama;
+
+  // Tampilkan info titik terpilih di tab Faktor
+  var tiEl = document.getElementById('titik-selected-info');
+  if (tiEl) {
+    tiEl.style.display = 'block';
+    document.getElementById('ts-nama').textContent = nama;
+    document.getElementById('ts-coord').textContent = `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
+  }
+
+  // Tampilkan place card di bawah peta
+  document.getElementById('pc-nama').textContent = nama;
+  document.getElementById('pc-coord').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)} · ${displayName||''}`;
+  document.getElementById('place-card').className = 'show';
+
+  // Hint
+  document.getElementById('map-hint').innerHTML = `<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Lokasi dipilih: ${nama}`;
+  document.getElementById('map-hint').className = 'map-hint';
+}
+
+function pakaiLokasiIni() {
+  // Pindah ke tab Titik dan fokus ke form
+  switchTab('titik', document.querySelectorAll('.ptab')[1]);
+  document.getElementById('inp-nama').focus();
+  tutupPlaceCard();
+}
+
+function tutupPlaceCard() {
+  document.getElementById('place-card').className = '';
+}
+
+// ─────────────────────────────────────────
+// SIMPAN TITIK KE DB
+// ─────────────────────────────────────────
+function simpanTitik() {
+  var nama  = document.getElementById('inp-nama').value.trim();
+  var jenis = document.getElementById('inp-jenis').value;
+
+  if (!nama)            { alert('Masukkan nama lokasi terlebih dahulu.'); return; }
+  if (!koordinatDipilih){ alert('Pilih koordinat terlebih dahulu:\n• Cari nama tempat di kotak pencarian peta, atau\n• Klik langsung di peta'); return; }
+
+  fetch(`${API_BASE}/api/simulasi`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      nama:  nama,
+      jenis: jenis,
+      lat:   koordinatDipilih.lat,
+      lng:   koordinatDipilih.lng
+    })
+  })
+  .then(res => res.json())
+  .then(() => {
+    tambahLog(`<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Titik "${nama}" (${jenis}) berhasil disimpan.`, jenis==='rawan'?'danger':'warn');
+    // Reset
+    document.getElementById('inp-nama').value = '';
+    document.getElementById('koordinat-box').className = 'koordinat-box belum';
+    document.getElementById('koordinat-box').innerHTML = '<b><i class="bi bi-geo-alt-fill"></i> Koordinat Belum Dipilih</b>Cari alamat di kotak pencarian peta, atau klik langsung di peta.';
+    koordinatDipilih = null;
+    if (pilihMarker) { map.removeLayer(pilihMarker); pilihMarker = null; }
+    tutupPlaceCard();
+    clearSearch();
+    document.getElementById('map-hint').innerHTML = '<i class="bi bi-map-fill"></i> Cari alamat di kotak pencarian, atau klik langsung di peta';
+    muatDataDB();
+  })
+  .catch(err => {
+    tambahLog(`<i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Gagal simpan: Pastikan server Node.js aktif di port 3000.`, 'danger');
+    alert('Gagal menyimpan. Pastikan server Node.js sudah berjalan.');
+  });
+}
+
+// ─────────────────────────────────────────
+// MUAT & TAMPILKAN DATA DB
+// ─────────────────────────────────────────
+function muatDataDB() {
+  fetch(`${API_BASE}/api/simulasi`)
+    .then(res => res.json())
+    .then(data => {
+      dbMarkers.clearLayers();
+      var semua = [...(data.rawan||[]), ...(data.balai||[])];
+
+      semua.forEach(f => {
+        var coords = f.geometry.coordinates;
+        var ll     = L.latLng(coords[1], coords[0]);
+        var jenis  = f.properties.jenis || (data.rawan?.some(r=>r===f) ? 'rawan' : 'balai');
+        var nama   = f.properties.nama || '—';
+        var warna  = jenis==='rawan' ? '#ef4444' : '#eab308';
+        var border = jenis==='rawan' ? '#fff' : '#333';
+
+        if (jenis==='rawan') L.circle(ll,{radius:800,color:warna,fillColor:warna,fillOpacity:.15,weight:1}).addTo(dbMarkers);
+
+        L.circleMarker(ll, {radius:9, fillColor:warna, color:border, weight:2, fillOpacity:.9})
+          .bindPopup(`<b>${jenis==='rawan'?'<i class="bi bi-record-circle-fill" style="color:#ef4444"></i> RAWAN':'<i class="bi bi-record-circle-fill" style="color:#eab308"></i> BALAI'}</b><br>${nama}`)
+          .addTo(dbMarkers);
+      });
+
+      // Update list panel
+      var listEl  = document.getElementById('titik-list');
+      var countEl = document.getElementById('badge-count');
+      countEl.textContent = semua.length + ' titik';
+
+      if (semua.length === 0) {
+        listEl.innerHTML = '<div class="titik-empty">Belum ada titik di database. Tambahkan menggunakan pencarian peta di atas.</div>';
+        return;
+      }
+
+      listEl.innerHTML = semua.map(f => {
+        var jenis = f.properties.jenis || 'rawan';
+        var nama  = f.properties.nama  || '—';
+        var id    = f.id || f.properties.id || '';
+        var coords = f.geometry.coordinates;
+        return `<div class="titik-item ${jenis}">
+          <span>${jenis==='rawan'?'<i class="bi bi-record-circle-fill" style="color:#ef4444"></i>':'<i class="bi bi-record-circle-fill" style="color:#eab308"></i>'}</span>
+          <div style="flex:1">
+            <div class="titik-nama">${nama}</div>
+            <div style="font-size:9px;color:#aaa;font-family:monospace">${coords[1].toFixed(4)}, ${coords[0].toFixed(4)}</div>
+          </div>
+          <span class="titik-badge ${jenis}">${jenis.toUpperCase()}</span>
+          ${id ? `<button class="btn-hapus" onclick="hapusTitik('${id}','${nama}')" title="Hapus"><i class="bi bi-trash-fill"></i></button>` : ''}
+        </div>`;
+      }).join('');
+
+      tambahLog(`<i class="bi bi-arrow-repeat"></i> DB diperbarui: ${data.rawan?.length||0} rawan + ${data.balai?.length||0} balai.`, 'info');
+    })
+    .catch(() => {
+      document.getElementById('titik-list').innerHTML =
+        '<div class="titik-empty"><i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Tidak bisa terhubung ke server (localhost:3000).</div>';
+      document.getElementById('badge-count').textContent = 'Offline';
+    });
+}
+
+function hapusTitik(id, nama) {
+  if (!confirm(`Hapus titik "${nama}" dari database?`)) return;
+  fetch(`${API_BASE}/api/simulasi/${id}`, {method:'DELETE'})
+    .then(r => r.json())
+    .then(() => { tambahLog(`<i class="bi bi-trash-fill"></i> Titik "${nama}" dihapus.`, 'warn'); muatDataDB(); })
+    .catch(() => tambahLog(`<i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> Gagal hapus "${nama}".`, 'danger'));
+}
+
+// ─────────────────────────────────────────
+// HITUNG FAKTOR
+// ─────────────────────────────────────────
+function update() {
+  var hujan   = +document.getElementById('sl-hujan').value;
+  var humid   = +document.getElementById('sl-humid').value;
+  var lereng  = +document.getElementById('sl-lereng').value;
+  var lahan   = +document.getElementById('sl-lahan').value;
+  var tanah   = +document.getElementById('sl-tanah').value;
+  var histori = +document.getElementById('sl-histori').value;
+
+  document.getElementById('v-hujan').textContent   = hujan + ' mm/jam';
+  document.getElementById('v-humid').textContent   = humid + '%';
+  document.getElementById('v-lereng').textContent  = lereng + '°';
+  document.getElementById('v-lahan').textContent   = document.getElementById('sl-lahan').selectedOptions[0].text.split(' (')[0];
+  document.getElementById('v-tanah').textContent   = document.getElementById('sl-tanah').selectedOptions[0].text.split(' (')[0];
+  document.getElementById('v-histori').textContent = document.getElementById('sl-histori').selectedOptions[0].text.split(' (')[0];
+
+  var f1 = Math.min((hujan/100)*25, 25);
+  var f2 = Math.max(0, Math.min(((humid-60)/40)*15, 15));
+  var f3 = Math.min((lereng/90)*20, 20);
+  var f4 = lahan;
+  var f5 = tanah;
+  var f6 = histori;
+  var total = Math.round(f1+f2+f3+f4+f5+f6);
+
+  function bc(v,mx){ return v/mx>0.6?'#ef4444':v/mx>0.35?'#eab308':'#22c55e'; }
+  function sb(id,pct,color){ var el=document.getElementById(id); el.style.width=Math.min(pct,100)+'%'; el.style.background=color; }
+  sb('b-hujan',  (f1/25)*100, bc(f1,25));
+  sb('b-humid',  (f2/15)*100, bc(f2,15));
+  sb('b-lereng', (f3/20)*100, bc(f3,20));
+
+  var level = total>=65?'bahaya':total>=35?'waspada':'aman';
+  document.getElementById('status-mega').className  = 'status-mega '+level;
+  document.getElementById('level-text').innerHTML = level==='bahaya'?'<i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b"></i> BAHAYA':level==='waspada'?'<i class="bi bi-lightning-charge-fill"></i> WASPADA':'<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> AMAN';
+  document.getElementById('skor-text').textContent  = `Indeks Risiko: ${total} / 100`;
+  document.getElementById('rekomen-text').textContent = level==='bahaya'
+    ? 'Risiko tinggi! Segera kirim alert & koordinasi evakuasi.'
+    : level==='waspada' ? 'Pantau terus. Siagakan petugas lapangan.'
+    : 'Kondisi aman. Tidak diperlukan tindakan segera.';
+  document.getElementById('nilai-total').innerHTML = `${total}<span style="font-size:12px;opacity:.5">/100</span>`;
+
+  // Update luas prediksi realtime
+  hitungLuas(total, level);
+
+  return {total, level, f1, f2, f3, f4, f5, f6};
+}
+
+function terapkanSimulasi() {
+  var h = update();
+  var luas = hitungLuas(h.total, h.level);
+
+  // Cek apakah ada titik terpilih untuk diperbarui di DB
+  var titikTarget = koordinatDipilih;
+  var namaTarget  = titikTarget ? (document.getElementById('inp-nama')?.value || titikTarget.nama) : null;
+
+  // Gambar lingkaran prediksi di peta jika ada titik terpilih
+  if (titikTarget && h.level !== 'aman') {
+    if (window._luasLayer) map.removeLayer(window._luasLayer);
+    window._luasLayer = L.layerGroup();
+    var ll = L.latLng(titikTarget.lat, titikTarget.lng);
+    L.circle(ll, {radius: luas.radiusMeters,  color:'#ef4444', fillColor:'#ef4444', fillOpacity:.15, weight:2, dashArray:null}).addTo(window._luasLayer);
+    L.circle(ll, {radius: luas.radiusWaspada, color:'#eab308', fillColor:'#eab308', fillOpacity:.06, weight:1.5, dashArray:'8,6'}).addTo(window._luasLayer);
+    window._luasLayer.addTo(map);
+    map.fitBounds(L.circle(ll, {radius: luas.radiusWaspada}).getBounds(), {padding:[30,30]});
+  }
+
+  fetch(`${API_BASE}/api/simulasi/status`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      level:  h.level, indeks: h.total,
+      faktor: {
+        curah_hujan:      +document.getElementById('sl-hujan').value,
+        kelembaban:       +document.getElementById('sl-humid').value,
+        kemiringan:       +document.getElementById('sl-lereng').value,
+        tutupan_lahan:    document.getElementById('sl-lahan').value,
+        jenis_tanah:      document.getElementById('sl-tanah').value,
+        histori_kejadian: document.getElementById('sl-histori').value,
+      },
+      radius_bahaya:  luas.radiusMeters,
+      radius_waspada: luas.radiusWaspada,
+      titik_lat: titikTarget ? titikTarget.lat : null,
+      titik_lng: titikTarget ? titikTarget.lng : null,
+      titik_nama: namaTarget,
+      catatan: `Admin: ${h.level.toUpperCase()}, Indeks ${h.total}/100, Radius bahaya ${luas.radiusMeters}m`,
+      timestamp: new Date().toISOString()
+    })
+  })
+  .then(r => r.json())
+  .then(() => {
+    var luasInfo = h.level !== 'aman' ? `\nRadius bahaya: ${luas.radiusMeters} m\nRadius waspada: ${luas.radiusWaspada} m` : '';
+    tambahLog(`<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Simulasi diterapkan: ${h.level.toUpperCase()}, Indeks ${h.total}/100${namaTarget?' — Titik: '+namaTarget:''}`, h.level==='bahaya'?'danger':h.level==='waspada'?'warn':'');
+    alert(`Simulasi berhasil diterapkan!\nLevel: ${h.level.toUpperCase()}\nIndeks: ${h.total}/100${luasInfo}\n\nHanya pengguna dalam radius tersebut yang mendapat warning.`);
+    muatDataDB();
+  })
+  .catch(() => {
+    tambahLog(`<i class="bi bi-check-circle-fill" style="color:#22c55e"></i> Dihitung lokal: ${h.level.toUpperCase()}, ${h.total}/100 (server offline)`, 'warn');
+    alert(`Simulasi selesai (mode lokal):\nLevel: ${h.level.toUpperCase()}\nIndeks: ${h.total}/100\n\nCatatan: Server Node.js tidak aktif.`);
+  });
+}
+
+// ── HITUNG LUAS PREDIKSI LONGSOR ──
+function hitungLuas(total, level) {
+  // Estimasi radius bahaya berdasarkan indeks risiko
+  // Indeks 100 → radius ~2km (luas ~12.57 km² = 1257 ha)
+  var radiusMeters  = Math.round((total / 100) * 2000);  // maks 2km
+  var radiusWaspada = Math.round(radiusMeters * 1.8);     // zona waspada lebih luas
+  var luasHa        = Math.round(Math.PI * Math.pow(radiusMeters/1000, 2) * 100);  // km² → ha
+  var luasWaspadaHa = Math.round(Math.PI * Math.pow(radiusWaspada/1000, 2) * 100);
+
+  var luasBox   = document.getElementById('luas-prediksi');
+  var luasVal   = document.getElementById('luas-val');
+  var luasSub   = document.getElementById('luas-sub');
+  var radiusInfo= document.getElementById('radius-info');
+
+  if(level === 'aman') {
+    luasBox.style.display = 'none';
+    return {radiusMeters, radiusWaspada};
+  }
+
+  luasBox.style.display = 'block';
+  luasVal.textContent = luasHa.toLocaleString('id-ID');
+  luasSub.textContent = 'hektar area bahaya langsung';
+  radiusInfo.innerHTML = `
+    <i class="bi bi-bounding-box"></i> <b>Radius bahaya:</b> ${radiusMeters} m (zona merah)<br>
+    <i class="bi bi-circle"></i> <b>Radius waspada:</b> ${radiusWaspada} m (zona kuning, ±${luasWaspadaHa.toLocaleString('id-ID')} ha)<br>
+    <i class="bi bi-people-fill"></i> Hanya pengguna dalam radius ini yang akan menerima warning.
+  `;
+  return {radiusMeters, radiusWaspada};
+}
+
+
+function resetFaktor() {
+  document.getElementById('sl-hujan').value  = 0;
+  document.getElementById('sl-humid').value  = 60;
+  document.getElementById('sl-lereng').value = 20;
+  document.getElementById('sl-lahan').selectedIndex  = 2;
+  document.getElementById('sl-tanah').selectedIndex  = 2;
+  document.getElementById('sl-histori').selectedIndex= 0;
+  update();
+  tambahLog('<i class="bi bi-arrow-counterclockwise"></i> Faktor direset ke nilai default.', 'warn');
+}
+
+function broadcastDarurat() {
+  var h = update();
+  if (confirm(`Kirim peringatan darurat?\nLevel: ${h.level.toUpperCase()} (${h.total}/100)`)) {
+    fetch(`${API_BASE}/api/broadcast`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({level:h.level,indeks:h.total})}).catch(()=>{});
+    tambahLog(`<i class="bi bi-broadcast" style="color:#ef4444"></i> BROADCAST dikirim! Level: ${h.level.toUpperCase()}`, 'danger');
+  }
+}
+
+// ─────────────────────────────────────────
+// TAB & LOG
+// ─────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ptab').forEach(t=>{ t.classList.remove('active'); t.style.color=''; });
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+function tambahLog(msg, type='') {
+  var d = document.getElementById('log-sim');
+  var t = new Date().toLocaleTimeString('id-ID');
+  d.insertAdjacentHTML('afterbegin', `<div class="log-item ${type}"><i class="bi bi-clock-fill"></i> ${t} — ${msg}</div>`);
+  if(type==='danger') document.querySelectorAll('.ptab')[2].style.color='#dc2626';
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+update();
+muatDataDB();
+</script>
+
+<!-- Animasi ring marker -->
+<style>
+@keyframes pulse-ring{
+  0%{transform:scale(.8);opacity:1}
+  100%{transform:scale(2);opacity:0}
+}
+</style>
+</body>
+</html>

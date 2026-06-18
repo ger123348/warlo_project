@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Monitor Saudara — WARLO</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=Inter:wght@300;400;500;600;700&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--cream:#F4EDDD;--olive:#344128;--olive-light:#4A5A3A;--olive-dark:#1E2A16;--brown:#6A513F;--terracotta:#B56B46;--gold:#C4A96A;--gold-light:#D9C08A;--border:rgba(52,65,40,0.12);}
+    body{display:flex;height:100vh;overflow:hidden;font-family:'Inter',sans-serif;background:var(--cream);}
+    ::selection{background:var(--olive);color:var(--cream);}
+
+    #sidebar{width:72px;background:var(--olive-dark);display:flex;flex-direction:column;align-items:center;padding:16px 0;flex-shrink:0;z-index:500;box-shadow:2px 0 20px rgba(0,0,0,.25);}
+    .sb-logo{width:44px;height:44px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:18px;color:var(--olive-dark);text-decoration:none;margin-bottom:28px;letter-spacing:.05em;}
+    .sb-menu{display:flex;flex-direction:column;gap:4px;flex:1;width:100%;padding:0 10px;}
+    .sb-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 6px;border-radius:8px;text-decoration:none;color:rgba(244,237,221,.4);font-size:9px;font-weight:500;text-align:center;transition:background .2s,color .2s;letter-spacing:.05em;}
+    .sb-item .sb-icon{font-size:18px;}
+    .sb-item:hover{background:rgba(244,237,221,.08);color:rgba(244,237,221,.8);}
+    .sb-item.active{background:rgba(196,169,106,.2);color:var(--gold);}
+    .sb-bottom{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 10px;width:100%;}
+    .sb-darurat{width:44px;height:44px;background:#b91c1c;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;cursor:pointer;animation:dpulse 2.5s infinite;}
+    @keyframes dpulse{0%,90%,100%{box-shadow:0 0 0 0 rgba(185,28,28,.45);}45%{box-shadow:0 0 0 8px rgba(185,28,28,0);}}
+    .sb-home{width:44px;height:44px;background:rgba(244,237,221,.07);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;text-decoration:none;color:rgba(244,237,221,.4);transition:color .2s,background .2s;}
+    .sb-home:hover{color:rgba(244,237,221,.8);background:rgba(244,237,221,.1);}
+
+    #app{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    #topbar{height:56px;background:var(--cream);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 20px;flex-shrink:0;}
+    #topbar h1{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--olive-dark);flex:1;letter-spacing:.02em;}
+    #topbar .topbar-sub{font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);}
+
+    #tengah{flex:1;display:flex;overflow:hidden;}
+    #map{flex:1;}
+
+    #panel{width:300px;background:var(--cream);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;}
+    .panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .ptab{flex:1;padding:10px 4px;text-align:center;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--brown);opacity:.55;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;}
+    .ptab.active{color:var(--gold);border-color:var(--gold);opacity:1;}
+
+    .panel-body{flex:1;overflow-y:auto;padding:16px;}
+    .panel-section{display:none;}
+    .panel-section.active{display:block;}
+    .panel-title{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.15em;color:var(--brown);opacity:.6;margin-bottom:10px;}
+
+    .btn-full{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px 14px;background:var(--olive-dark);color:var(--gold);border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:background .15s;letter-spacing:.05em;}
+    .btn-full:hover{background:var(--olive);}
+    .btn-outline{background:rgba(52,65,40,.05);color:var(--olive-dark);border:1px solid var(--border);}
+    .btn-outline:hover{background:rgba(52,65,40,.1);}
+    .btn-full:disabled{opacity:.5;cursor:not-allowed;}
+
+    .share-box{background:var(--olive-dark);border-radius:14px;padding:16px;color:var(--cream);margin-bottom:14px;}
+    .share-box h3{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;margin-bottom:6px;}
+    .share-box p{font-size:11px;opacity:.65;margin-bottom:12px;line-height:1.5;}
+    .share-link-wrap{display:flex;gap:6px;}
+    .share-link-input{flex:1;padding:8px 10px;border-radius:6px;border:none;background:rgba(244,237,221,.12);color:var(--cream);font-size:11px;outline:none;}
+    .share-link-input::placeholder{color:rgba(244,237,221,.35);}
+    .btn-copy{padding:8px 12px;background:var(--gold);color:var(--olive-dark);border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+    .btn-copy:hover{background:var(--gold-light);}
+
+    .saudara-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+    .saudara-card{background:#fff;border-radius:12px;padding:12px;border-left:3px solid var(--border);border:1px solid var(--border);border-left-width:3px;display:flex;flex-direction:column;gap:8px;}
+    .saudara-card.aman{border-left-color:var(--olive);}
+    .saudara-card.waspada{border-left-color:var(--gold);}
+    .saudara-card.bahaya{border-left-color:#b91c1c;}
+    .saudara-card-top{display:flex;align-items:center;gap:10px;cursor:pointer;}
+    .saudara-avatar{width:36px;height:36px;border-radius:50%;background:var(--olive-dark);display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:700;font-size:14px;flex-shrink:0;border:1px solid rgba(196,169,106,.3);}
+    .saudara-info{flex:1;min-width:0;}
+    .saudara-info h4{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:var(--olive-dark);transition:color .15s;}
+    .saudara-card-top:hover .saudara-info h4{color:var(--gold);}
+    .saudara-info p{font-size:11px;color:var(--brown);opacity:.6;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .saudara-status{font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;flex-shrink:0;letter-spacing:.08em;}
+    .saudara-status.aman{background:rgba(52,65,40,.1);color:var(--olive);}
+    .saudara-status.waspada{background:rgba(196,169,106,.15);color:#92741f;}
+    .saudara-status.bahaya{background:rgba(185,28,28,.1);color:#b91c1c;}
+    .saudara-card-actions{display:flex;gap:6px;}
+    .saudara-card-actions button{flex:1;padding:6px 4px;font-size:11px;font-weight:500;border:1px solid var(--border);background:rgba(52,65,40,.03);border-radius:6px;cursor:pointer;color:var(--brown);transition:background .15s;font-family:'Inter',sans-serif;}
+    .saudara-card-actions button:hover{background:rgba(52,65,40,.08);}
+    .saudara-card-actions button.aksi-hapus:hover{background:rgba(185,28,28,.08);color:#b91c1c;border-color:rgba(185,28,28,.3);}
+
+    .form-group{margin-bottom:12px;}
+    .form-group label{font-size:9px;font-weight:700;color:var(--brown);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.12em;}
+    .form-group input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;outline:none;background:#fff;color:var(--olive-dark);}
+    .form-group input:focus{border-color:var(--gold);}
+
+    .edit-banner{background:rgba(52,65,40,.06);border:1px solid rgba(52,65,40,.15);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:var(--olive);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .edit-banner button{background:none;border:none;color:var(--olive);font-weight:700;font-size:11px;cursor:pointer;text-decoration:underline;flex-shrink:0;}
+
+    .share-received{background:rgba(52,65,40,.06);border:1px solid rgba(52,65,40,.15);border-radius:12px;padding:14px;margin-bottom:12px;}
+    .share-received h4{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:var(--olive);margin-bottom:4px;}
+    .share-received p{font-size:12px;color:var(--brown);line-height:1.5;}
+
+    #modal-darurat,#modal-cuaca{display:none;position:fixed;inset:0;z-index:9999;background:rgba(30,42,22,.65);align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+    #modal-darurat.open,#modal-cuaca.open{display:flex;}
+    .modal-box{background:var(--cream);border-radius:18px;padding:32px;width:340px;box-shadow:0 32px 80px rgba(0,0,0,.3);max-height:85vh;overflow-y:auto;}
+    .modal-box h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--terracotta);margin-bottom:4px;}
+    .modal-box p{font-size:12px;color:var(--brown);margin-bottom:20px;}
+    .darurat-list{display:flex;flex-direction:column;gap:8px;}
+    .darurat-item{display:flex;align-items:center;gap:14px;padding:12px 16px;background:#fff;border:1px solid var(--border);border-radius:12px;text-decoration:none;color:var(--olive-dark);font-size:13px;font-weight:500;transition:background .15s,border-color .15s;}
+    .darurat-item:hover{background:rgba(181,107,70,.07);border-color:rgba(181,107,70,.3);}
+    .darurat-item .d-icon{font-size:20px;color:var(--gold);}
+    .darurat-item .d-num{font-size:10px;color:var(--brown);opacity:.6;margin-top:1px;}
+    .modal-close{width:100%;margin-top:14px;padding:10px;background:none;border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:12px;color:var(--brown);font-family:'Inter',sans-serif;letter-spacing:.05em;}
+    .modal-close:hover{background:rgba(52,65,40,.05);}
+
+    .cuaca-head{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+    .cuaca-icon{font-size:48px;}
+    .cuaca-suhu{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:400;color:var(--olive-dark);}
+    .cuaca-desk{font-size:12px;color:var(--brown);opacity:.7;margin-top:2px;}
+    .cuaca-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+    .cuaca-item{background:rgba(52,65,40,.05);border-radius:10px;padding:10px;border:1px solid var(--border);}
+    .cuaca-item .ci-label{font-size:9px;color:var(--brown);opacity:.6;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+    .cuaca-item .ci-val{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--olive-dark);}
+    .cuaca-lokasi{font-size:11px;color:var(--brown);opacity:.6;line-height:1.5;margin-bottom:6px;}
+    .cuaca-loading,.cuaca-error{font-size:12px;color:var(--brown);opacity:.5;text-align:center;padding:30px 0;}
+
+    .klik-hint{background:rgba(52,65,40,.06);border:1px solid rgba(52,65,40,.15);border-radius:10px;padding:10px 12px;margin:12px 0;font-size:11px;color:var(--olive);}
+    .klik-hint b{display:flex;align-items:center;gap:4px;margin-bottom:6px;}
+    .btn-klik-peta{display:block;width:100%;margin-top:8px;padding:6px;background:var(--olive-dark);color:var(--gold);border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;font-family:'Inter',sans-serif;}
+
+    #preview-lokasi{display:none;background:rgba(52,65,40,.05);border-radius:10px;padding:10px 12px;margin-bottom:12px;border-left:3px solid var(--gold);}
+    #autocomplete-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(52,65,40,.12);z-index:9999;max-height:220px;overflow-y:auto;margin-top:2px;}
+    .ac-item{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;line-height:1.4;transition:background .1s;}
+    .ac-item:hover{background:rgba(52,65,40,.05);}
+    .ac-item .ac-main{font-weight:600;color:var(--olive-dark);}
+    .ac-item .ac-sub{font-size:10px;color:var(--brown);opacity:.5;margin-top:2px;}
+
+    .info-empty{font-size:12px;color:var(--brown);opacity:.45;text-align:center;padding:20px 0;line-height:1.6;}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--olive-dark);color:var(--cream);padding:10px 20px;border-radius:8px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;max-width:80%;text-align:center;}
+    .toast.show{opacity:1;}
+    .hr-divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+    .btn-x{padding:0 10px;border:1px solid var(--border);border-radius:8px;background:rgba(52,65,40,.04);cursor:pointer;display:none;font-size:14px;color:var(--brown);}
+  </style>
+</head>
+<body class="warlo-user">
+
+<div id="sidebar">
+  <a href="../index.html" class="sb-logo">W</a>
+  <nav class="sb-menu">
+    <a href="peta.html"    class="sb-item"><span class="sb-icon"><i class="bi bi-map-fill"></i></span><span>Peta</span></a>
+    <a href="saudara.html" class="sb-item active"><span class="sb-icon"><i class="bi bi-people-fill"></i></span><span>Saudara</span></a>
+    <a href="edukasi.html" class="sb-item"><span class="sb-icon"><i class="bi bi-book-fill"></i></span><span>Edukasi</span></a>
+  </nav>
+  <div class="sb-bottom">
+    <button class="sb-darurat" onclick="toggleDarurat()"><i class="bi bi-exclamation-octagon-fill"></i></button>
+    <a href="../index.html" class="sb-home"><i class="bi bi-house-fill"></i></a>
+  </div>
+</div>
+
+<div id="app">
+  <div id="topbar">
+    <h1><i class="bi bi-people-fill" style="color:var(--gold);margin-right:8px;font-size:15px;"></i>Monitor Saudara</h1>
+    <span class="topbar-sub">Pantau Keamanan Keluarga</span>
+  </div>
+  <div id="tengah">
+    <div id="map"></div>
+    <div id="panel">
+      <div class="panel-tabs">
+        <div class="ptab active" onclick="switchTab('pantau',this)"><i class="bi bi-eye-fill"></i> Pantau</div>
+        <div class="ptab" onclick="switchTab('bagikan',this)"><i class="bi bi-upload"></i> Bagikan</div>
+        <div class="ptab" onclick="switchTab('tambah',this)"><i class="bi bi-plus-circle-fill"></i> Tambah</div>
+      </div>
+      <div class="panel-body">
+
+        <!-- TAB PANTAU -->
+        <div id="tab-pantau" class="panel-section active">
+          <div id="share-received-area"></div>
+          <p class="panel-title">Daftar Saudara</p>
+          <div id="saudara-list" class="saudara-list">
+            <p class="info-empty">Belum ada saudara ditambahkan.<br>Tambahkan lewat tab <i class="bi bi-plus-circle-fill"></i> Tambah<br>atau minta mereka kirim link lokasinya.</p>
+          </div>
+        </div>
+
+        <!-- TAB BAGIKAN -->
+        <div id="tab-bagikan" class="panel-section">
+          <div class="share-box">
+            <h3><i class="bi bi-upload"></i> Bagikan Lokasi Kamu</h3>
+            <p>Kirim link ini ke saudaramu agar mereka bisa memantau apakah wilayahmu terdampak longsor.</p>
+            <div class="share-link-wrap">
+              <input class="share-link-input" id="share-link-val" readonly value="Klik tombol di bawah..."/>
+              <button class="btn-copy" onclick="copyLink()">Salin</button>
+            </div>
+          </div>
+          <button class="btn-full" onclick="buatShareLink()"><i class="bi bi-geo-alt-fill"></i> Dapatkan Link Lokasiku</button>
+          <p style="font-size:11px;color:var(--brown);opacity:.5;line-height:1.6;text-align:center;">Link ini berisi koordinat GPS kamu. Siapapun yang membuka link ini akan melihat posisimu di peta WARLO.</p>
+        </div>
+
+        <!-- TAB TAMBAH -->
+        <div id="tab-tambah" class="panel-section">
+          <div id="edit-banner-area"></div>
+          <p class="panel-title" id="tambah-judul">Tambah Saudara</p>
+          <div class="form-group"><label>Nama Saudara</label><input type="text" id="inp-nama" placeholder="cth: Ayah, Ibu, Kakak..."></div>
+          <div class="form-group" style="position:relative">
+            <label>Cari Alamat / Lokasi</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="inp-alamat" placeholder="Ketik alamat..." autocomplete="off" oninput="onAlamatInput()" onkeydown="onAlamatKey(event)" style="flex:1">
+              <button onclick="clearSearch()" id="btn-clear-search" class="btn-x" title="Hapus"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div id="autocomplete-dropdown"></div>
+          </div>
+          <div id="preview-lokasi">
+            <div style="font-size:9px;color:var(--brown);opacity:.6;margin-bottom:3px;text-transform:uppercase;letter-spacing:.1em;"><i class="bi bi-geo-alt-fill"></i> Lokasi dipilih</div>
+            <div id="preview-alamat-text" style="font-size:12px;color:var(--olive-dark);font-weight:500;line-height:1.4;"></div>
+            <div id="preview-coords" style="font-size:10px;color:var(--brown);opacity:.45;margin-top:3px;font-family:monospace;"></div>
+          </div>
+          <button class="btn-full" id="btn-simpan-alamat" onclick="simpanSaudaraDariPreview()" disabled style="opacity:.5"><i class="bi bi-check-circle-fill"></i> Simpan ke Daftar</button>
+          <div id="hasil-alamat"></div>
+          <div class="klik-hint">
+            <b><i class="bi bi-lightbulb-fill" style="color:var(--gold)"></i> Klik langsung di peta</b>
+            Lebih akurat dari ketik alamat!
+            <button id="btn-mode-klik" class="btn-klik-peta" onclick="toggleModeKlik()"><i class="bi bi-map-fill"></i> Aktifkan Mode Klik Peta</button>
+          </div>
+          <hr class="hr-divider">
+          <p class="panel-title">Atau tempel link yang dikirim</p>
+          <div class="form-group"><label>Link Lokasi Saudara</label><input type="text" id="inp-link" placeholder="https://...?lat=...&lon=...&nama=..."></div>
+          <button class="btn-full btn-outline" onclick="tempelLink()"><i class="bi bi-paperclip"></i> Tambah dari Link</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- MODAL DARURAT -->
+<div id="modal-darurat">
+  <div class="modal-box">
+    <h2><i class="bi bi-exclamation-octagon-fill" style="color:var(--terracotta);margin-right:8px;"></i>Hubungi Bantuan Darurat</h2>
+    <p>Pilih instansi yang ingin dihubungi.</p>
+    <div class="darurat-list">
+      <a href="tel:117" class="darurat-item"><span class="d-icon"><i class="bi bi-bank2"></i></span><div><div>BNPB Nasional</div><div class="d-num">117</div></div></a>
+      <a href="tel:07217773578" class="darurat-item"><span class="d-icon"><i class="bi bi-house-fill"></i></span><div><div>BPBD Lampung</div><div class="d-num">0721-773578</div></div></a>
+      <a href="tel:119" class="darurat-item"><span class="d-icon"><i class="bi bi-truck-front-fill"></i></span><div><div>Ambulans</div><div class="d-num">119</div></div></a>
+    </div>
+    <button class="modal-close" onclick="toggleDarurat()">Tutup</button>
+  </div>
+</div>
+
+<!-- MODAL CUACA -->
+<div id="modal-cuaca">
+  <div class="modal-box">
+    <h2 style="color:var(--olive-dark);"><i class="bi bi-cloud-sun-fill" style="color:var(--gold);"></i> Cuaca Lokasi</h2>
+    <p id="cuaca-nama-saudara">Memuat...</p>
+    <div id="cuaca-konten"><div class="cuaca-loading">Mengambil data cuaca...</div></div>
+    <button class="modal-close" onclick="tutupCuaca()">Tutup</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map=L.map('map',{center:[-5.10,105.10],zoom:9});
+L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:20}).addTo(map);
+
+var daftarSaudara=JSON.parse(localStorage.getItem('warlo_saudara')||'[]');
+var daftarZonaBahaya=[],markerSaudara={},editingId=null;
+
+fetch('../assets/data/lampung.geojson').then(r=>r.json()).then(d=>{L.geoJson(d,{style:{color:'#2563eb',weight:2,fillOpacity:0.01}}).addTo(map);}).catch(()=>{});
+fetch('../assets/data/rawan_longsor.geojson').then(r=>r.json()).then(d=>{
+  d.features.forEach(f=>{
+    var c=f.geometry.coordinates;
+    daftarZonaBahaya.push({latlng:L.latLng(c[1],c[0]),nama:f.properties.nama_lokasi||'Kawasan Rawan'});
+    L.circle([c[1],c[0]],{radius:1000,color:'#C4A96A',fillColor:'#C4A96A',fillOpacity:.07,weight:1,dashArray:'6,6'}).addTo(map);
+  });
+  renderSaudaraList();
+}).catch(()=>{renderSaudaraList();});
+
+(function cekShareParams(){
+  var params=new URLSearchParams(window.location.search);
+  var lat=parseFloat(params.get('lat'));var lon=parseFloat(params.get('lon'));var nama=params.get('nama')||'Saudara';
+  if(!isNaN(lat)&&!isNaN(lon)){
+    document.getElementById('share-received-area').innerHTML=`
+      <div class="share-received"><h4><i class="bi bi-envelope-fill"></i> Link lokasi diterima!</h4>
+      <p><b>${nama}</b> berbagi lokasinya dengan kamu. Tambahkan ke daftar pantauan?</p>
+      <button class="btn-full" style="margin-top:8px" onclick="tambahDariShare(${lat},${lon},'${nama}')"><i class="bi bi-check-circle-fill"></i> Tambahkan ${nama}</button></div>`;
+    map.setView([lat,lon],13);L.marker([lat,lon]).addTo(map).bindPopup(`<b>${nama}</b><br>Lokasi dibagikan`).openPopup();
+  }
+})();
+
+function tambahDariShare(lat,lon,nama){tambahSaudara(nama,lat,lon,'');document.getElementById('share-received-area').innerHTML='';showToast('<i class="bi bi-check-circle-fill" style="color:var(--olive)"></i> '+nama+' berhasil ditambahkan!');}
+
+function reverseGeocode(lat,lon){
+  return fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=0`,{headers:{'Accept-Language':'id','User-Agent':'WARLO-App'}}).then(r=>r.json()).then(d=>(d&&d.display_name)?d.display_name:'').catch(()=>'');
+}
+
+var autoTimer=null,selectedLokasi=null,modeKlikAktif=false,previewMarker=null;
+
+function onAlamatInput(){
+  var q=document.getElementById('inp-alamat').value.trim();
+  document.getElementById('btn-clear-search').style.display=q?'block':'none';
+  clearSelectedLokasi();if(autoTimer)clearTimeout(autoTimer);
+  if(q.length<3){tutupDropdown();return;}
+  document.getElementById('autocomplete-dropdown').innerHTML='<div class="ac-item"><span class="ac-main">⏳ Mencari...</span></div>';
+  document.getElementById('autocomplete-dropdown').style.display='block';
+  autoTimer=setTimeout(()=>cariAutocomplete(q),400);
+}
+
+function onAlamatKey(e){
+  var items=document.querySelectorAll('.ac-item');var focused=document.querySelector('.ac-item.focused');var idx=-1;
+  items.forEach((el,i)=>{if(el===focused)idx=i;});
+  if(e.key==='ArrowDown'){e.preventDefault();setFocusAC(items,idx+1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();setFocusAC(items,idx-1);}
+  else if(e.key==='Enter'&&focused){e.preventDefault();focused.click();}
+  else if(e.key==='Escape')tutupDropdown();
+}
+
+function setFocusAC(items,idx){items.forEach(el=>el.classList.remove('focused'));if(idx>=0&&idx<items.length)items[idx].classList.add('focused');}
+
+function cariAutocomplete(q){
+  var url='https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&countrycodes=id&viewbox=103.5,-6.5,108.5,-3.5&bounded=0&q='+encodeURIComponent(q);
+  fetch(url,{headers:{'Accept-Language':'id','User-Agent':'WARLO-App'}}).then(r=>r.json()).then(data=>{
+    var dd=document.getElementById('autocomplete-dropdown');
+    if(!data||data.length===0){dd.innerHTML='<div class="ac-item"><span class="ac-main" style="color:#b91c1c">Lokasi tidak ditemukan.</span></div>';return;}
+    dd.innerHTML=data.map(item=>{
+      var short=item.display_name.split(',').slice(0,3).join(', ');
+      return`<div class="ac-item" tabindex="0" onclick="pilihLokasi(${item.lat},${item.lon},'${item.display_name.replace(/'/g,"&#39;")}')">
+        <div class="ac-main"><i class="bi bi-geo-alt-fill" style="color:var(--gold)"></i> ${short}</div>
+        <div class="ac-sub">${item.display_name}</div></div>`;
+    }).join('');
+  }).catch(()=>{document.getElementById('autocomplete-dropdown').innerHTML='<div class="ac-item"><span class="ac-main" style="color:#b91c1c">Gagal menghubungi server.</span></div>';});
+}
+
+function pilihLokasi(lat,lon,display){
+  selectedLokasi={lat:parseFloat(lat),lon:parseFloat(lon),display:display};
+  document.getElementById('inp-alamat').value=display.split(',').slice(0,3).join(', ');
+  tutupDropdown();tampilPreview(selectedLokasi);
+  map.setView([selectedLokasi.lat,selectedLokasi.lon],15);
+  pasangPreviewMarker(selectedLokasi.lat,selectedLokasi.lon);enableSimpan();
+}
+function tutupDropdown(){document.getElementById('autocomplete-dropdown').style.display='none';}
+function clearSearch(){document.getElementById('inp-alamat').value='';document.getElementById('btn-clear-search').style.display='none';tutupDropdown();clearSelectedLokasi();}
+function clearSelectedLokasi(){selectedLokasi=null;document.getElementById('preview-lokasi').style.display='none';document.getElementById('btn-simpan-alamat').disabled=true;document.getElementById('btn-simpan-alamat').style.opacity='.5';if(previewMarker){map.removeLayer(previewMarker);previewMarker=null;}}
+function tampilPreview(lokasi){document.getElementById('preview-lokasi').style.display='block';document.getElementById('preview-alamat-text').textContent=lokasi.display;document.getElementById('preview-coords').textContent=`${parseFloat(lokasi.lat).toFixed(6)}, ${parseFloat(lokasi.lon).toFixed(6)}`;}
+function enableSimpan(){var btn=document.getElementById('btn-simpan-alamat');btn.disabled=false;btn.style.opacity='1';}
+function pasangPreviewMarker(lat,lon){
+  if(previewMarker)map.removeLayer(previewMarker);
+  previewMarker=L.marker([lat,lon],{icon:L.divIcon({html:'<div style="background:var(--olive-dark);color:var(--gold);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)"><i class="bi bi-geo-alt-fill"></i></div>',className:'',iconAnchor:[14,14]})}).addTo(map);
+}
+
+function toggleModeKlik(){
+  modeKlikAktif=!modeKlikAktif;var btn=document.getElementById('btn-mode-klik');
+  if(modeKlikAktif){btn.innerHTML='<i class="bi bi-x-circle-fill" style="color:#f87171"></i> Nonaktifkan Mode Klik Peta';btn.style.background='#b91c1c';map.getContainer().style.cursor='crosshair';showToast('<i class="bi bi-map-fill"></i> Klik pada peta untuk pilih lokasi saudara');}
+  else{btn.innerHTML='<i class="bi bi-map-fill"></i> Aktifkan Mode Klik Peta';btn.style.background='var(--olive-dark)';map.getContainer().style.cursor='';}
+}
+
+map.on('click',function(e){
+  if(!modeKlikAktif)return;var lat=e.latlng.lat,lon=e.latlng.lng;
+  pasangPreviewMarker(lat,lon);
+  document.getElementById('preview-lokasi').style.display='block';
+  document.getElementById('preview-alamat-text').textContent='⏳ Mengambil nama alamat...';
+  document.getElementById('preview-coords').textContent=`${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+  enableSimpan();selectedLokasi={lat:lat,lon:lon,display:''};
+  reverseGeocode(lat,lon).then(nama=>{
+    var display=nama||`${lat.toFixed(5)}, ${lon.toFixed(5)}`;selectedLokasi.display=display;
+    document.getElementById('preview-alamat-text').textContent=display;
+    document.getElementById('inp-alamat').value=display.split(',').slice(0,3).join(', ');
+    document.getElementById('btn-clear-search').style.display='block';
+  });
+});
+
+document.addEventListener('click',function(e){if(!e.target.closest('#inp-alamat')&&!e.target.closest('#autocomplete-dropdown'))tutupDropdown();});
+
+function simpanSaudaraDariPreview(){
+  var nama=document.getElementById('inp-nama').value.trim();
+  if(!nama){showToast('<i class="bi bi-exclamation-triangle-fill" style="color:var(--gold)"></i> Nama saudara wajib diisi');return;}
+  if(!selectedLokasi){showToast('<i class="bi bi-exclamation-triangle-fill" style="color:var(--gold)"></i> Pilih lokasi dulu');return;}
+  if(editingId){
+    var s=daftarSaudara.find(x=>x.id===editingId);
+    if(s){s.nama=nama;s.alamat=selectedLokasi.display;s.lat=selectedLokasi.lat;s.lon=selectedLokasi.lon;s.status=cekStatus(L.latLng(selectedLokasi.lat,selectedLokasi.lon));simpanDataSaudara();if(markerSaudara[s.id]){map.removeLayer(markerSaudara[s.id]);delete markerSaudara[s.id];}pasangMarker(s);renderSaudaraList();showToast('<i class="bi bi-check-circle-fill" style="color:var(--olive)"></i> Data '+nama+' berhasil diperbarui!');}
+    batalEdit();
+  }else{tambahSaudara(nama,selectedLokasi.lat,selectedLokasi.lon,selectedLokasi.display);showToast('<i class="bi bi-check-circle-fill" style="color:var(--olive)"></i> '+nama+' ditambahkan ke peta!');}
+  document.getElementById('inp-nama').value='';clearSearch();if(modeKlikAktif)toggleModeKlik();if(previewMarker){map.removeLayer(previewMarker);previewMarker=null;}
+  switchTab('pantau',document.querySelector('.ptab'));
+}
+
+function tempelLink(){
+  var url=document.getElementById('inp-link').value.trim();
+  try{var u=new URL(url);var lat=parseFloat(u.searchParams.get('lat'));var lon=parseFloat(u.searchParams.get('lon'));var nama=u.searchParams.get('nama')||'Saudara';if(isNaN(lat)||isNaN(lon))throw'invalid';tambahSaudara(nama,lat,lon,'');document.getElementById('inp-link').value='';switchTab('pantau',document.querySelector('.ptab'));showToast('<i class="bi bi-check-circle-fill" style="color:var(--olive)"></i> '+nama+' ditambahkan dari link!');}
+  catch(e){showToast('<i class="bi bi-exclamation-triangle-fill" style="color:var(--gold)"></i> Link tidak valid');}
+}
+
+function tambahSaudara(nama,lat,lon,alamat){
+  var latlng=L.latLng(lat,lon);var status=cekStatus(latlng);
+  var obj={id:Date.now(),nama:nama,lat:lat,lon:lon,alamat:alamat||'',status:status};
+  daftarSaudara.push(obj);simpanDataSaudara();pasangMarker(obj);renderSaudaraList();
+  if(!obj.alamat){reverseGeocode(lat,lon).then(nm=>{if(nm){obj.alamat=nm;simpanDataSaudara();renderSaudaraList();}});}
+}
+function simpanDataSaudara(){localStorage.setItem('warlo_saudara',JSON.stringify(daftarSaudara));}
+function pasangMarker(s){
+  var warna=s.status==='bahaya'?'#b91c1c':s.status==='waspada'?'#C4A96A':'#344128';
+  var m=L.circleMarker([s.lat,s.lon],{radius:10,fillColor:warna,color:'#fff',weight:2.5,fillOpacity:.95}).addTo(map).bindPopup(`<b>${s.nama}</b><br>${s.alamat?s.alamat+'<br>':''}Status: <b>${s.status.toUpperCase()}</b>`);
+  markerSaudara[s.id]=m;
+}
+function cekStatus(latlng){
+  var jarakMin=Infinity;daftarZonaBahaya.forEach(z=>{var d=latlng.distanceTo(z.latlng);if(d<jarakMin)jarakMin=d;});
+  return jarakMin<500?'bahaya':jarakMin<1000?'waspada':'aman';
+}
+function renderSaudaraList(){
+  var el=document.getElementById('saudara-list');
+  if(!daftarSaudara.length){el.innerHTML='<p class="info-empty">Belum ada saudara ditambahkan.<br>Tambahkan lewat tab <i class="bi bi-plus-circle-fill"></i> Tambah<br>atau minta mereka kirim link lokasinya.</p>';return;}
+  el.innerHTML=daftarSaudara.map(s=>`
+    <div class="saudara-card ${s.status}">
+      <div class="saudara-card-top" onclick="fokusMarker(${s.id})">
+        <div class="saudara-avatar">${s.nama[0].toUpperCase()}</div>
+        <div class="saudara-info"><h4>${s.nama}</h4><p title="${s.alamat?s.alamat.replace(/"/g,'&quot;'):''}">${s.alamat?s.alamat:(s.lat.toFixed(4)+', '+s.lon.toFixed(4))}</p></div>
+        <span class="saudara-status ${s.status}">${s.status}</span>
+      </div>
+      <div class="saudara-card-actions">
+        <button onclick="event.stopPropagation();lihatCuaca(${s.id})"><i class="bi bi-cloud-sun-fill"></i> Cuaca</button>
+        <button onclick="event.stopPropagation();editSaudara(${s.id})"><i class="bi bi-pencil-fill"></i> Edit</button>
+        <button class="aksi-hapus" onclick="event.stopPropagation();hapusSaudara(${s.id})"><i class="bi bi-trash-fill"></i> Hapus</button>
+      </div>
+    </div>`).join('');
+}
+function fokusMarker(id){var s=daftarSaudara.find(x=>x.id===id);if(s)map.setView([s.lat,s.lon],14);if(markerSaudara[id])markerSaudara[id].openPopup();}
+function hapusSaudara(id){
+  var s=daftarSaudara.find(x=>x.id===id);if(!s)return;
+  if(!confirm('Hapus "'+s.nama+'" dari daftar pantauan?'))return;
+  daftarSaudara=daftarSaudara.filter(x=>x.id!==id);simpanDataSaudara();
+  if(markerSaudara[id]){map.removeLayer(markerSaudara[id]);delete markerSaudara[id];}
+  if(editingId===id)batalEdit();renderSaudaraList();showToast('<i class="bi bi-trash-fill"></i> '+s.nama+' dihapus dari daftar.');
+}
+function editSaudara(id){
+  var s=daftarSaudara.find(x=>x.id===id);if(!s)return;editingId=id;
+  document.getElementById('inp-nama').value=s.nama;
+  document.getElementById('inp-alamat').value=s.alamat||(s.lat.toFixed(6)+', '+s.lon.toFixed(6));
+  document.getElementById('hasil-alamat').innerHTML='';
+  document.getElementById('tambah-judul').innerHTML='<i class="bi bi-pencil-fill"></i> Edit Data Saudara';
+  document.getElementById('btn-simpan-alamat').innerHTML='<i class="bi bi-save-fill"></i> Simpan Perubahan';
+  selectedLokasi={lat:s.lat,lon:s.lon,display:s.alamat||(s.lat.toFixed(6)+','+s.lon.toFixed(6))};
+  tampilPreview(selectedLokasi);enableSimpan();pasangPreviewMarker(s.lat,s.lon);
+  document.getElementById('edit-banner-area').innerHTML=`<div class="edit-banner"><span>Mengedit: <b>${s.nama}</b></span><button onclick="batalEdit()">Batal</button></div>`;
+  switchTab('tambah',document.querySelectorAll('.ptab')[2]);
+}
+function batalEdit(){
+  editingId=null;document.getElementById('inp-nama').value='';clearSearch();document.getElementById('hasil-alamat').innerHTML='';
+  document.getElementById('tambah-judul').textContent='Tambah Saudara';
+  document.getElementById('btn-simpan-alamat').innerHTML='<i class="bi bi-check-circle-fill"></i> Simpan ke Daftar';
+  document.getElementById('edit-banner-area').innerHTML='';
+}
+
+function infoKodeCuaca(code){
+  var m={0:['<i class="bi bi-sun-fill" style="color:#f59e0b"></i>','Cerah'],1:['<i class="bi bi-cloud-sun-fill"></i>','Cerah Berawan'],2:['<i class="bi bi-cloud-sun-fill"></i>','Berawan Sebagian'],3:['<i class="bi bi-cloud-fill"></i>','Berawan'],45:['<i class="bi bi-cloud-haze2-fill"></i>','Berkabut'],61:['<i class="bi bi-cloud-rain-fill"></i>','Hujan Ringan'],63:['<i class="bi bi-cloud-rain-fill"></i>','Hujan'],65:['<i class="bi bi-cloud-lightning-rain-fill"></i>','Hujan Lebat'],80:['<i class="bi bi-cloud-sun-fill"></i>','Hujan Lokal Ringan'],81:['<i class="bi bi-cloud-rain-fill"></i>','Hujan Lokal'],82:['<i class="bi bi-cloud-lightning-rain-fill"></i>','Hujan Lokal Lebat'],95:['<i class="bi bi-cloud-lightning-rain-fill"></i>','Badai Petir']};
+  return m[code]||['<i class="bi bi-thermometer-half"></i>','Tidak diketahui'];
+}
+function lihatCuaca(id){
+  var s=daftarSaudara.find(x=>x.id===id);if(!s)return;
+  document.getElementById('cuaca-nama-saudara').innerHTML='<i class="bi bi-person-circle"></i> '+s.nama+(s.alamat?' — '+s.alamat:'');
+  document.getElementById('cuaca-konten').innerHTML='<div class="cuaca-loading">Mengambil data cuaca...</div>';
+  document.getElementById('modal-cuaca').classList.add('open');
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${s.lat}&longitude=${s.lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&timezone=Asia%2FJakarta`)
+    .then(r=>r.json()).then(data=>{
+      var c=data.current;if(!c)throw'no data';
+      var info=infoKodeCuaca(c.weather_code);var waktu=new Date(c.time).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});
+      document.getElementById('cuaca-konten').innerHTML=`
+        <div class="cuaca-head"><div class="cuaca-icon">${info[0]}</div><div><div class="cuaca-suhu">${Math.round(c.temperature_2m)}°C</div><div class="cuaca-desk">${info[1]}</div></div></div>
+        <div class="cuaca-grid">
+          <div class="cuaca-item"><div class="ci-label">Kelembapan</div><div class="ci-val">${c.relative_humidity_2m}%</div></div>
+          <div class="cuaca-item"><div class="ci-label">Angin</div><div class="ci-val">${c.wind_speed_10m} km/j</div></div>
+          <div class="cuaca-item"><div class="ci-label">Curah Hujan</div><div class="ci-val">${c.precipitation} mm</div></div>
+          <div class="cuaca-item"><div class="ci-label">Status Longsor</div><div class="ci-val" style="color:${s.status==='bahaya'?'#b91c1c':s.status==='waspada'?'#92741f':'var(--olive)'}">${s.status.toUpperCase()}</div></div>
+        </div>
+        <div class="cuaca-lokasi"><i class="bi bi-geo-alt-fill"></i> ${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}<br><i class="bi bi-clock-fill"></i> Update: ${waktu} WIB</div>
+        ${(c.precipitation>10||s.status!=='aman')?'<p style="font-size:11px;color:#b91c1c;background:rgba(185,28,28,.07);padding:8px 10px;border-radius:8px;border:1px solid rgba(185,28,28,.15);"><i class="bi bi-exclamation-triangle-fill" style="color:var(--gold)"></i> Cuaca/lokasi berisiko — sebaiknya hubungi saudara untuk memastikan keadaan mereka.</p>':''}`;
+    }).catch(()=>{document.getElementById('cuaca-konten').innerHTML='<div class="cuaca-error"><i class="bi bi-exclamation-triangle-fill" style="color:var(--gold)"></i> Gagal mengambil data cuaca.</div>';});
+}
+function tutupCuaca(){document.getElementById('modal-cuaca').classList.remove('open');}
+
+daftarSaudara.forEach(pasangMarker);
+
+function buatShareLink(){
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      var lat=pos.coords.latitude.toFixed(6);var lon=pos.coords.longitude.toFixed(6);
+      var nama=prompt('Namamu (untuk ditampilkan ke saudara):','Saya')||'Saya';
+      var link=`${window.location.origin}${window.location.pathname}?lat=${lat}&lon=${lon}&nama=${encodeURIComponent(nama)}`;
+      document.getElementById('share-link-val').value=link;
+    },()=>{showToast('Tidak bisa ambil GPS. Coba masukkan koordinat manual.');});
+  }else showToast('Browser tidak mendukung GPS.');
+}
+function copyLink(){
+  var val=document.getElementById('share-link-val').value;
+  navigator.clipboard.writeText(val).then(()=>showToast('<i class="bi bi-check-circle-fill" style="color:var(--olive)"></i> Link disalin!')).catch(()=>{document.getElementById('share-link-val').select();document.execCommand('copy');showToast('<i class="bi bi-check-circle-fill" style="color:var(--olive)"></i> Link disalin!');});
+}
+function switchTab(name,el){
+  document.querySelectorAll('.panel-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');el.classList.add('active');
+}
+function showToast(msg){var t=document.getElementById('toast');t.innerHTML=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function toggleDarurat(){document.getElementById('modal-darurat').classList.toggle('open');}
+</script>
+</body>
+</html>

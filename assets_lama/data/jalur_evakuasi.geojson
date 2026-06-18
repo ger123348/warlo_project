@@ -1,0 +1,56 @@
+{
+  "type": "FeatureCollection",
+  "name": "jalur_evakuasi",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": 1, "nama": "Jalur Evakuasi Utama - Tanggamus", "tipe": "utama", "panjang_km": 12.5, "keterangan": "Jalur utama evakuasi dari lereng Tanggamus menuju posko kecamatan" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [104.65, -5.42], [104.62, -5.40], [104.58, -5.38], [104.55, -5.37], [104.52, -5.36], [104.50, -5.35]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 2, "nama": "Jalur Evakuasi Alternatif - Tanggamus Selatan", "tipe": "alternatif", "panjang_km": 15.2, "keterangan": "Jalur alternatif via jalan desa menuju balai desa terdekat" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [104.65, -5.42], [104.63, -5.44], [104.60, -5.45], [104.56, -5.44], [104.52, -5.42], [104.50, -5.40]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 3, "nama": "Jalur Evakuasi Utama - Lampung Barat", "tipe": "utama", "panjang_km": 18.0, "keterangan": "Jalur evakuasi dari zona rawan Lampung Barat menuju posko utama" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [104.10, -5.10], [104.15, -5.08], [104.20, -5.05], [104.25, -5.02], [104.30, -5.00]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 4, "nama": "Jalur Evakuasi Alternatif - Pesisir Barat", "tipe": "alternatif", "panjang_km": 22.0, "keterangan": "Jalur alternatif via pesisir barat menuju titik aman" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [104.05, -5.20], [104.00, -5.18], [103.97, -5.15], [103.95, -5.12], [103.95, -5.08]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": 5, "nama": "Jalur Evakuasi Utama - Bandar Lampung", "tipe": "utama", "panjang_km": 8.5, "keterangan": "Jalur evakuasi menuju RSUD dan posko utama kota" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [105.22, -5.40], [105.24, -5.39], [105.26, -5.38], [105.28, -5.37]
+        ]
+      }
+    }
+  ]
+}

@@ -1,438 +1,2528 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WARLO - Sistem Informasi Mitigasi Bencana Tanah Longsor Lampung</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WARLO | Tempat yang Tidak Ditunjukkan Peta</title>
+  <meta name="description" content="Lepaskan diri dari ketidaktahuan. Pantau kabut rendah di lereng curam, rasakan getaran tanah di bawah kaki, dan langkahkan kaki ke wilayah yang perlu Anda ketahui."/>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- GSAP + ScrollTrigger + Lenis Smooth Scroll -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    /* ============================================ */
+    /* CSS CUSTOM PROPERTIES                        */
+    /* ============================================ */
+    :root {
+      --cream: #F4EDDD;
+      --olive: #344128;
+      --olive-light: #4A5A3A;
+      --olive-dark: #1E2A16;
+      --brown: #6A513F;
+      --terracotta: #B56B46;
+      --gold: #C4A96A;
+      --text-light: #F4EDDD;
+      --text-dark: #1E2A16;
+    }
+
+    /* ============================================ */
+    /* RESET & BASE                                 */
+    /* ============================================ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: auto; /* Lenis handles smooth scroll */
+    }
+
+    html.lenis, html.lenis body {
+      height: auto;
+    }
+
+    .lenis.lenis-smooth {
+      scroll-behavior: auto !important;
+    }
+
+    .lenis.lenis-smooth [data-lenis-prevent] {
+      overscroll-behavior: contain;
+    }
+
+    .lenis.lenis-stopped {
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--olive);
+      overflow-x: hidden;
+      cursor: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    ::selection {
+      background: var(--olive);
+      color: var(--cream);
+    }
+
+    /* ============================================ */
+    /* CUSTOM CURSOR                                */
+    /* ============================================ */
+    .cursor-dot {
+      position: fixed;
+      top: 0; left: 0;
+      width: 8px; height: 8px;
+      background: var(--olive);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99999;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+      transition: width 0.3s, height 0.3s, background 0.3s;
+    }
+
+    .cursor-dot.on-dark {
+      background: var(--cream);
+    }
+
+    .cursor-dot.expanded {
+      width: 48px; height: 48px;
+      background: rgba(244, 237, 221, 0.15);
+      border: 1px solid rgba(244, 237, 221, 0.3);
+      backdrop-filter: blur(4px);
+    }
+
+    .cursor-ring {
+      position: fixed;
+      top: 0; left: 0;
+      width: 40px; height: 40px;
+      border: 1px solid rgba(52, 65, 40, 0.25);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99998;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+      transition: width 0.4s, height 0.4s, border-color 0.3s;
+    }
+
+    .cursor-ring.on-dark {
+      border-color: rgba(244, 237, 221, 0.2);
+    }
+
+    /* ============================================ */
+    /* TYPOGRAPHY                                   */
+    /* ============================================ */
+    .serif {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    .text-display {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 8vw, 8rem);
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .text-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 4.5rem);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+
+    .text-subheading {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+    }
+
+    .text-body {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.875rem, 1.1vw, 1.05rem);
+      font-weight: 300;
+      line-height: 1.8;
+    }
+
+    /* ============================================ */
+    /* LOADING SCREEN                               */
+    /* ============================================ */
+    .loader {
+      position: fixed;
+      inset: 0;
+      background: var(--olive-dark);
+      z-index: 100000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    .loader-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 300;
+      color: var(--cream);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0;
+    }
+
+    .loader-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0;
+    }
+
+    .loader-bar-track {
+      width: 160px;
+      height: 1px;
+      background: rgba(244, 237, 221, 0.15);
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+    }
+
+    .loader-bar-fill {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--gold);
+    }
+
+    /* ============================================ */
+    /* NAVIGATION                                   */
+    /* ============================================ */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      padding: 1.5rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      mix-blend-mode: difference;
+      pointer-events: none;
+    }
+
+    .nav > * {
+      pointer-events: auto;
+    }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--cream);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--cream);
+      text-decoration: none;
+      cursor: none;
+      position: relative;
+      padding-bottom: 4px;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0%;
+      height: 1px;
+      background: var(--cream);
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+    }
+
+/* ============================================ */
+/* HERO SECTION                                 */
+/* ============================================ */
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--olive-dark);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================ */
+/* BACKGROUND IMAGE                             */
+/* ============================================ */
+
+.hero-image-wrapper {
+  position: absolute;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
+  z-index: 0;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+
+  filter:
+    brightness(0.55)
+    contrast(1.1)
+    saturate(0.85);
+
+  transform: scale(1.05);
+}
+
+/* ============================================ */
+/* DARK OVERLAY                                 */
+/* ============================================ */
+
+.hero-gradient {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(30, 42, 22, 0.45) 0%,
+      rgba(30, 42, 22, 0.15) 35%,
+      rgba(30, 42, 22, 0.35) 70%,
+      rgba(30, 42, 22, 0.88) 100%
+    );
+}
+
+/* ============================================ */
+/* HERO CONTENT                                 */
+/* ============================================ */
+
+.hero-content {
+  position: relative;
+  z-index: 5;
+
+  width: 100%;
+  max-width: 950px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  padding:
+    0 24px;
+
+  transform: translateY(-40px);
+}
+
+/* ============================================ */
+/* EYEBROW                                      */
+/* ============================================ */
+
+.hero-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+
+  color: var(--gold);
+
+  margin-bottom: 1.5rem;
+
+  opacity: 1;
+}
+
+/* ============================================ */
+/* TITLE                                         */
+/* ============================================ */
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+
+  font-size: clamp(4rem, 10vw, 9rem);
+
+  font-weight: 300;
+  line-height: 0.9;
+
+  color: var(--cream);
+
+  letter-spacing: -0.03em;
+
+  margin-bottom: 2rem;
+
+  overflow: hidden;
+}
+
+.hero-title .line {
+  display: block;
+  overflow: hidden;
+}
+
+.hero-title .line-inner {
+  display: block;
+
+  transform: translateY(0%);
+}
+
+/* ============================================ */
+/* TAGLINE                                      */
+/* ============================================ */
+
+.hero-tagline {
+  font-family: 'Inter', sans-serif;
+
+  font-size: 0.8rem;
+  font-weight: 300;
+
+  letter-spacing: 0.12em;
+  line-height: 1.8;
+
+  color: rgba(244, 237, 221, 0.72);
+
+  max-width: 520px;
+
+  opacity: 1;
+}
+
+/* ============================================ */
+/* SCROLL INDICATOR                             */
+/* ============================================ */
+
+.hero-scroll-indicator {
+  position: absolute;
+
+  bottom: 38px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  z-index: 10;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 0.7rem;
+
+  opacity: 1;
+}
+
+.hero-scroll-line {
+  width: 1px;
+  height: 55px;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--gold) 0%,
+      transparent 100%
+    );
+
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+
+.hero-scroll-text {
+  font-size: 0.55rem;
+
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+
+  color: rgba(244, 237, 221, 0.4);
+
+  font-weight: 500;
+}
+
+/* ============================================ */
+/* ANIMATION                                    */
+/* ============================================ */
+
+@keyframes scrollPulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scaleY(0.6);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+/* ============================================ */
+/* RESPONSIVE                                   */
+/* ============================================ */
+
+@media (max-width: 768px) {
+
+  .hero-content {
+    transform: translateY(-20px);
+  }
+
+  .hero-title {
+    font-size: clamp(3rem, 16vw, 6rem);
+  }
+
+  .hero-tagline {
+    font-size: 0.72rem;
+    max-width: 90%;
+  }
+
+  .hero-scroll-indicator {
+    bottom: 28px;
+  }
+}
+/* ============================================ */
+/* HERO SPOTLIGHT OVERLAY                       */
+/* ============================================ */
+
+.hero-cursor-overlay{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .35s ease;
+  will-change:mask-image;
+  will-change:-webkit-mask-image;
+}
+
+.hero-cursor-overlay img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:
+    brightness(1.05)
+    contrast(1.08)
+    saturate(1.05);
+}
+
+.hero-cursor-overlay::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255,255,255,.08) 0%,
+      rgba(255,255,255,.03) 45%,
+      transparent 75%
+    );
+  mix-blend-mode:screen;
+}
+
+    /* ============================================ */
+    /* QUOTE SECTION                                */
+    /* ============================================ */
+    .quote-section {
+      padding: 15vh 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cream);
+      min-height: 80vh;
+    }
+
+    .quote-inner {
+      max-width: 900px;
+      text-align: center;
+    }
+
+    .quote-mark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 5rem;
+      line-height: 1;
+      color: var(--olive);
+      opacity: 0.15;
+      display: block;
+      margin-bottom: -1.5rem;
+    }
+
+    .quote-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.5rem, 3.5vw, 3rem);
+      font-weight: 300;
+      line-height: 1.5;
+      color: var(--olive);
+      font-style: italic;
+    }
+
+    .quote-text .word {
+      display: inline-block;
+      opacity: 0.08;
+      transition: none; /* GSAP handles this */
+    }
+
+    .quote-text .char {
+      display: inline-block;
+      color: rgba(52, 65, 40, 0.12);
+      transition: none;
+      will-change: color;
+    }
     
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-    <link rel="stylesheet" href="assets/style.css">
+    .quote-text.scrub-ready {
+      color: transparent;
+    }
+
+    .quote-attribution {
+      margin-top: 3rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--olive);
+      opacity: 0.4;
+    }
+
+    /* ============================================ */
+    /* DUAL IMAGE + TEXT SECTION                    */
+    /* ============================================ */
+    .split-section {
+      position: relative;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+    }
+
+    .split-image-side {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .split-image-side img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      scale: 1.15;
+    }
+
+    .split-text-side {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6rem;
+    }
+
+    .split-text-side .label {
+      margin-bottom: 2rem;
+    }
+
+    .split-text-side h2 {
+      margin-bottom: 2rem;
+    }
+
+    .split-text-side p {
+      max-width: 440px;
+    }
+
+    @media (max-width: 900px) {
+      .split-section {
+        grid-template-columns: 1fr;
+      }
+      .split-image-side {
+        height: 50vh;
+      }
+      .split-text-side {
+        padding: 3rem 1.5rem;
+      }
+    }
+
+    /* ============================================ */
+    /* FULL IMAGE PARALLAX SECTION                  */
+    /* ============================================ */
+    .full-image-section {
+      position: relative;
+      height: 90vh;
+      overflow: hidden;
+    }
+
+    .full-image-section img {
+      position: absolute;
+      inset: -15%;
+      width: 130%;
+      height: 130%;
+      object-fit: cover;
+      filter: brightness(0.5) contrast(1.15);
+    }
+
+    .full-image-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(30, 42, 22, 0.6) 0%,
+        rgba(30, 42, 22, 0.2) 50%,
+        rgba(30, 42, 22, 0.7) 100%
+      );
+      z-index: 1;
+    }
+
+    .full-image-content {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    .full-image-content .text-display {
+      color: var(--cream);
+    }
+
+    .full-image-content .text-body {
+      color: rgba(244, 237, 221, 0.65);
+      max-width: 500px;
+      margin-top: 2rem;
+    }
+
+    /* ============================================ */
+    /* FEATURES SECTION — PARALLAX FLIP CARDS       */
+    /* ============================================ */
+    .features-section {
+      padding: 12vh 3rem;
+      background: var(--olive-dark);
+      color: var(--cream);
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 6rem;
+    }
+
+    .features-header .label {
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    .features-header h2 {
+      color: var(--cream);
+    }
+
+    /* FLIP CARD GRID */
+    .features-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .feature-col {
+      width: calc(33.333% - 2rem);
+      margin: 1rem;
+      cursor: none;
+      opacity: 0;
+      transform: translateY(40px);
+    }
+
+    .feature-card {
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      position: relative;
+    }
+
+    .feature-card-front,
+    .feature-card-back {
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 8px 32px 0 rgba(0,0,0,0.45);
+      border-radius: 6px;
+      transition: transform .7s cubic-bezier(0.4, 0.2, 0.2, 1);
+      backface-visibility: hidden;
+      text-align: center;
+      min-height: 300px;
+      height: auto;
+      color: var(--cream);
+      font-size: 1.5rem;
+      position: relative;
+    }
+
+    .feature-card-back {
+      background: linear-gradient(135deg, var(--olive) 0%, var(--olive-dark) 100%);
+      border: 1px solid rgba(196, 169, 106, 0.2);
+    }
+
+    /* Dark overlay on front */
+    .feature-card-front::after {
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 1;
+      width: 100%; height: 100%;
+      content: '';
+      display: block;
+      opacity: .55;
+      background-color: var(--olive-dark);
+      backface-visibility: hidden;
+      border-radius: 6px;
+    }
+
+    /* Gold top accent on back */
+    .feature-card-back::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+      background: var(--gold);
+      border-radius: 6px 6px 0 0;
+    }
+
+    /* Hover flip */
+    .feature-col:hover .feature-card-front,
+    .feature-col:hover .feature-card-back {
+      transition: transform .7s cubic-bezier(0.4, 0.2, 0.2, 1);
+    }
+
+    .feature-card-back {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      transform: rotateY(180deg);
+      transform-style: preserve-3d;
+    }
+
+    .feature-card-front {
+      transform: rotateY(0deg);
+      transform-style: preserve-3d;
+    }
+
+    .feature-col:hover .feature-card-back {
+      transform: rotateY(0deg);
+      transform-style: preserve-3d;
+    }
+
+    .feature-col:hover .feature-card-front {
+      transform: rotateY(-180deg);
+      transform-style: preserve-3d;
+    }
+
+    /* Inner content with parallax depth */
+    .feature-inner {
+      transform: translateY(-50%) translateZ(60px) scale(0.94);
+      top: 50%;
+      position: absolute;
+      left: 0;
+      width: 100%;
+      padding: 2rem;
+      box-sizing: border-box;
+      outline: 1px solid transparent;
+      perspective: inherit;
+      z-index: 2;
+    }
+
+    /* FRONT content */
+    .feature-card-front .feature-inner .feature-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.5rem;
+      font-weight: 300;
+      color: var(--gold);
+      opacity: 0.8;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .feature-card-front .feature-inner .feature-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--cream);
+      margin-bottom: 0.75rem;
+      position: relative;
+      display: block;
+    }
+
+    .feature-card-front .feature-inner .feature-title::after {
+      content: '';
+      width: 3rem;
+      height: 1px;
+      position: absolute;
+      background: var(--gold);
+      display: block;
+      left: 0; right: 0;
+      margin: 0 auto;
+      bottom: -0.6rem;
+    }
+
+    .feature-card-front .feature-inner .feature-sub {
+      color: rgba(244, 237, 221, 0.55);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.6rem;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 1.2rem;
+      display: block;
+    }
+
+    /* BACK content */
+    .feature-card-back .feature-inner .feature-desc {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 300;
+      line-height: 1.85;
+      color: rgba(244, 237, 221, 0.75);
+      display: block;
+    }
+
+    .feature-card-back .feature-inner .feature-back-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+      display: block;
+    }
+
+    /* Touch support for mobile */
+    .feature-col.hover .feature-card-back {
+      transform: rotateY(0deg);
+      transform-style: preserve-3d;
+    }
+    .feature-col.hover .feature-card-front {
+      transform: rotateY(-180deg);
+      transform-style: preserve-3d;
+    }
+
+    /* Responsive */
+    @media screen and (max-width: 64rem) {
+      .feature-col { width: calc(50% - 2rem); }
+    }
+
+    @media screen and (max-width: 48rem) {
+      .feature-col { width: calc(50% - 2rem); }
+      .features-section { padding: 8vh 1.5rem; }
+    }
+
+    @media screen and (max-width: 32rem) {
+      .feature-col { width: 100%; margin: 0 0 2rem 0; }
+    }
+
+    /* ============================================ */
+    /* DATA SECTION (Horizontal Scroll Cards)       */
+    /* ============================================ */
+    .data-section {
+      padding: 12vh 0;
+      background: var(--cream);
+      overflow: hidden;
+    }
+
+    .data-header {
+      text-align: center;
+      padding: 0 3rem;
+      margin-bottom: 5rem;
+    }
+
+    .data-track {
+      display: flex;
+      gap: 2rem;
+      padding: 0 3rem;
+      will-change: transform;
+    }
+
+    .data-card {
+      flex-shrink: 0;
+      width: 380px;
+      padding: 3rem;
+      background: var(--olive);
+      color: var(--cream);
+      border-radius: 2px;
+      cursor: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .data-card-accent {
+      width: 30px;
+      height: 2px;
+      background: var(--gold);
+      margin-bottom: 2rem;
+    }
+
+    .data-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      font-weight: 500;
+      margin-bottom: 1.2rem;
+    }
+
+    .data-card p {
+      font-size: 0.8rem;
+      font-weight: 300;
+      line-height: 1.8;
+      color: rgba(244, 237, 221, 0.55);
+    }
+
+    .data-card-stat {
+      margin-top: 2.5rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(244, 237, 221, 0.1);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .data-card-stat-item .val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: var(--gold);
+    }
+
+    .data-card-stat-item .lbl {
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(244, 237, 221, 0.35);
+      margin-top: 0.3rem;
+    }
+
+    /* ============================================ */
+    /* CTA SECTION                                  */
+    /* ============================================ */
+    .cta-section {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--olive-dark);
+    }
+
+    .cta-bg-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .cta-content {
+     text-align:center;
+     display:flex;
+     flex-direction:column;
+     align-items:center;
+     z-index: 2;
+     max-width: 700px;
+     padding: 3rem;
+    }
+
+    .cta-content .text-heading {
+      color: var(--cream);
+      margin-bottom: 1.5rem;
+    }
+
+    .cta-content .text-body {
+      color: rgba(244, 237, 221, 0.5);
+      margin-bottom: 3rem;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 1.1rem 3.5rem;
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--cream);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: none;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.5s;
+    }
+
+    .cta-button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: -1;
+    }
+
+    .cta-button:hover {
+      color: var(--olive-dark);
+    }
+
+    .cta-button:hover::before {
+      transform: scaleX(1);
+    }
+
+    /* ============================================ */
+/* CTA + LAYERED COMBINED                       */
+/* ============================================ */
+
+.cta-layered-section{
+    display:flex;
+    min-height:100vh;
+    width:100%;
+    overflow:hidden;
+}
+
+/* LEFT */
+
+.layered-side{
+    flex:1;
+    background:var(--cream);
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    position:relative;
+    overflow:hidden;
+}
+
+/* RIGHT */
+
+.cta-side{
+    flex:1;
+    position:relative;
+
+    background:var(--olive-dark);
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.cta-side .cta-content{
+    position:relative;
+    z-index:2;
+    max-width:650px;
+    padding:4rem;
+    text-align:left;
+}
+
+.cta-side .text-heading{
+    color:var(--cream);
+    margin-bottom:1.5rem;
+}
+
+.cta-side .text-body{
+    color:rgba(244,237,221,.55);
+    margin-bottom:3rem;
+}
+
+/* RESPONSIVE */
+
+@media (max-width:1024px){
+
+    .cta-layered-section{
+        flex-direction:column;
+    }
+
+    .layered-side{
+        min-height:60vh;
+    }
+
+    .cta-side{
+        min-height:70vh;
+    }
+
+    .cta-side .cta-content{
+        text-align:center;
+    }
+}
+
+    /* ============================================ */
+    /* FOOTER                                       */
+    /* ============================================ */
+    .site-footer {
+      background: var(--olive-dark);
+      color: var(--cream);
+      padding: 6rem 3rem 3rem;
+      border-top: 1px solid rgba(244, 237, 221, 0.06);
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 3rem;
+      margin-bottom: 5rem;
+    }
+
+    .footer-brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cream);
+    }
+
+    .footer-brand-sub {
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(244, 237, 221, 0.3);
+      margin-top: 0.5rem;
+    }
+
+    .footer-col h4 {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-col p,
+    .footer-col a {
+      font-size: 0.8rem;
+      font-weight: 300;
+      line-height: 2;
+      color: rgba(244, 237, 221, 0.45);
+      text-decoration: none;
+      display: block;
+      cursor: none;
+    }
+
+    .footer-col a:hover {
+      color: var(--cream);
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(244, 237, 221, 0.06);
+    }
+
+    .footer-bottom p {
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: rgba(244, 237, 221, 0.2);
+    }
+
+    .footer-disclaimer {
+      font-size: 0.65rem;
+      font-weight: 300;
+      line-height: 1.8;
+      color: rgba(244, 237, 221, 0.25);
+      max-width: 600px;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border: 1px solid rgba(244, 237, 221, 0.06);
+    }
+
+    @media (max-width: 768px) {
+      .footer-top {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+      .footer-bottom {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+    }
+
+    /* ============================================ */
+    /* HORIZONTAL DIVIDER                           */
+    /* ============================================ */
+    .divider {
+      width: 60px;
+      height: 1px;
+      background: var(--olive);
+      opacity: 0.2;
+      margin: 0 auto;
+    }
+
+    .divider.light {
+      background: var(--cream);
+      opacity: 0.1;
+    }
+
+    /* ============================================ */
+    /* REVEAL ANIMATIONS (initial states)           */
+    /* ============================================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-60px);
+    }
+
+    .reveal-scale {
+      opacity: 0;
+      transform: scale(1.15);
+    }
+
+    /* ============================================ */
+    /* WebGL Canvas Overlay (CTA section)           */
+    /* ============================================ */
+    #cta-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ============================================ */
+    /* IRONHILL LARGE TEXT & SVG LINE               */
+    /* ============================================ */
+    .ironhill-text-section {
+      position: relative;
+      background: var(--cream);
+      padding: 15vh 10vw;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+    .ironhill-line-svg {
+      display: none; /* replaced by #organicLineSvg in cream-line-wrapper */
+    }
+    .ironhill-text-content {
+      position: relative;
+      z-index: 2;
+      max-width: 1200px;
+      text-align: center;
+    }
+    .ironhill-large-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 6vw, 5.5rem);
+      font-weight: 300;
+      line-height: 1.1;
+      color: var(--olive);
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+    }
+    .ironhill-large-text .word {
+      display: inline-block;
+      opacity: 0.1;
+    }
+
+    /* ============================================ */
+    /* NEW LAYERED FOOTER                           */
+    /* ============================================ */
+    .main-container-footer {
+        width: 100%;
+        height: 100vh;
+        background: var(--cream);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        border-top: 1px solid rgba(52, 65, 40, 0.1);
+    }
+    .layered-text-container {
+        transform: scale(0.8);
+        transform-origin: center;
+        cursor: pointer;
+        position: relative;
+        z-index: 10;
+    }
+    .text-row {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 6px;
+    }
+    .text-wrapper {
+        position: relative;
+        transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    .text-top-kiri, .text-bottom-kiri {
+        white-space: nowrap;
+        padding: 0 20px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        word-spacing: 0.15em;
+        font-size: 72px !important;
+        font-family: inherit;
+    }
+    .layered-text-container:hover .text-wrapper {
+        transform: translateY(-50%);
+    }
+    .row-0 .text-wrapper { transition-delay: 0s; }
+    .row-1 .text-wrapper { transition-delay: 0.04s; }
+    .row-2 .text-wrapper { transition-delay: 0.08s; }
+    .row-3 .text-wrapper { transition-delay: 0.12s; }
+    .row-4 .text-wrapper { transition-delay: 0.16s; }
+    .row-5 .text-wrapper { transition-delay: 0.20s; }
+    .row-6 .text-wrapper { transition-delay: 0.24s; }
+    .row-7 .text-wrapper { transition-delay: 0.28s; }
+    
+    .text-olive-light { color: var(--olive-light); }
+    .text-olive { color: var(--olive); }
+    .text-olive-dark { color: var(--olive-dark); }
+    
+    .hover-hint {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+        color: rgba(52, 65, 40, 0.5);
+        background: rgba(52, 65, 40, 0.05);
+        padding: 8px 16px;
+        border-radius: 30px;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 20;
+    }
+    /* ============================================ */
+    /* PHOTO HORIZONTAL SCROLL (Kejadian Nyata)     */
+    /* ============================================ */
+    .kejadian-section {
+      position: relative;
+      background: var(--olive-dark);
+      border-top: 1px solid rgba(244, 237, 221, 0.06);
+    }
+
+    .kejadian-header {
+      text-align: center;
+      padding: 10vh 3rem 6vh;
+    }
+
+    .kejadian-header .label {
+      color: var(--terracotta);
+      margin-bottom: 1.5rem;
+    }
+
+    .kejadian-header h2 {
+      color: var(--cream);
+    }
+
+    .kejadian-pin-container {
+      position: relative;
+      height: 380vh;
+    }
+
+    .kejadian-pin {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .kejadian-track {
+      display: flex;
+      align-items: center;
+      gap: 4vw;
+      padding: 0 8vw;
+      will-change: transform;
+    }
+
+    .kejadian-intro-panel {
+      flex-shrink: 0;
+      width: 38vw;
+      min-width: 280px;
+    }
+
+    .kejadian-intro-panel .k-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+      display: block;
+    }
+
+    .kejadian-intro-panel h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 4rem);
+      font-weight: 300;
+      line-height: 1.05;
+      color: var(--cream);
+      margin-bottom: 1.8rem;
+    }
+
+    .kejadian-intro-panel p {
+      font-size: 0.85rem;
+      font-weight: 300;
+      line-height: 1.85;
+      color: rgba(244, 237, 221, 0.45);
+      max-width: 340px;
+    }
+
+    .slide-item {
+      flex-shrink: 0;
+      width: 30vw;
+      min-width: 300px;
+      max-width: 420px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-item-inner {
+      aspect-ratio: 3/4;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slide-item img {
+      width: 100%;
+      height: 120%;
+      object-fit: cover;
+      filter: saturate(0.5) brightness(0.65) contrast(1.1);
+      transform: translateY(-8%);
+      will-change: transform;
+      display: block;
+      transition: filter 0.5s ease;
+    }
+
+    .slide-item:hover img {
+      filter: saturate(0.75) brightness(0.8) contrast(1.1);
+    }
+
+    .slide-item-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        transparent 50%,
+        rgba(30, 42, 22, 0.85) 100%
+      );
+      pointer-events: none;
+    }
+
+    .slide-caption {
+      margin-top: 1rem;
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--terracotta);
+    }
+
+    .slide-number {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 300;
+      color: rgba(244, 237, 221, 0.08);
+      line-height: 1;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .kejadian-outro-panel {
+      flex-shrink: 0;
+      width: 28vw;
+      min-width: 240px;
+    }
+
+    .kejadian-outro-panel p {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: clamp(1.2rem, 2vw, 1.8rem);
+      font-weight: 300;
+      line-height: 1.6;
+      color: rgba(244, 237, 221, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .kejadian-pin-container { height: auto; }
+      .kejadian-pin {
+        position: relative;
+        height: auto;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .kejadian-pin::-webkit-scrollbar { display: none; }
+      .kejadian-track {
+        padding: 0 1.5rem 3rem;
+      }
+      .slide-item { width: 75vw; }
+      .kejadian-intro-panel { width: 75vw; }
+      .kejadian-outro-panel { width: 60vw; }
+      .scrub-quote-section { padding: 10vh 1.5rem; }
+    }
+
+    @media (max-width: 1024px) {
+        .text-top-kiri, .text-bottom-kiri { font-size: clamp(38px, 3.2vw, 54px) !important; }
+        .text-row { font-size: clamp(38px, 3.2vw, 54px) !important; }
+        .text-top-kiri, .text-bottom-kiri { line-height: 58px !important; height: 64px !important; }
+    }
+    
+  </style>
 </head>
 <body>
 
-    <!-- Overlay Mobile -->
-    <div class="sidebar-overlay"></div>
+  <!-- ============================================ -->
+  <!-- CURSOR                                       -->
+  <!-- ============================================ -->
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
 
-    <!-- HEADER -->
-    <header class="header">
-        <div class="header-left">
-            <button class="menu-toggle" id="menuToggle"><i class='bx bx-menu'></i></button>
-            <div class="header-logo">WL</div>
-            <div class="header-title">
-                <h1>WARLO GIS Dashboard</h1>
-                <p>Mitigasi & Respons Darurat Tanah Longsor Prov. Lampung</p>
-            </div>
-        </div>
-        <div class="header-right">
-            <div class="status-badge">
-                <div class="status-dot"></div>
-                <span class="status-text">Sistem Aktif</span>
-            </div>
-        </div>
-    </header>
+  <!-- ============================================ -->
+  <!-- LOADING SCREEN                               -->
+  <!-- ============================================ -->
+  <div class="loader" id="loader">
+    <div class="loader-title" id="loaderTitle">WARLO</div>
+    <div class="loader-subtitle" id="loaderSub">Mitigasi Longsor Lampung</div>
+    <div class="loader-bar-track" id="loaderBarTrack">
+      <div class="loader-bar-fill" id="loaderBarFill"></div>
+    </div>
+  </div>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div class="sidebar-nav">
-            <div class="nav-section-title">Menu Utama</div>
-            <a href="#" class="nav-item active" data-action="dashboard">
-                <i class='bx bxs-dashboard'></i> Dashboard & Peta
-            </a>
-            <a href="#" class="nav-item" data-panel="panel-histori">
-                <i class='bx bx-history'></i> Histori Kejadian
-            </a>
-            
-            <div class="nav-section-title">Modul Mitigasi</div>
-            
-            <!-- Nested Menu Edukasi -->
-            <div class="nav-item nav-toggle" style="cursor: pointer;">
-                <i class='bx bx-book-reader'></i> Edukasi Kebencanaan
-                <i class='bx bx-chevron-right nav-chevron'></i>
-            </div>
-            <div class="nav-sub">
-                <a href="#" class="nav-item" data-panel="panel-ciri">Ciri-ciri Awal</a>
-                <a href="#" class="nav-item" data-panel="panel-sebelum">Sebelum Longsor</a>
-                <a href="#" class="nav-item" data-panel="panel-saat">Saat Longsor</a>
-                <a href="#" class="nav-item" data-panel="panel-sesudah">Sesudah Longsor</a>
-            </div>
+  <!-- ============================================ -->
+  <!-- NAVIGATION                                   -->
+  <!-- ============================================ -->
+  <nav class="nav" id="mainNav">
+    <a href="#" class="nav-logo">WARLO</a>
+    <ul class="nav-links">
+      <li><a href="#tentang">Tentang</a></li>
+      <li><a href="#fitur">Fitur</a></li>
+      <li><a href="#data">Basis Data</a></li>
+      <li><a href="#aksi">Masuk Sistem</a></li>
+    </ul>
+  </nav>
 
-            <a href="#" class="nav-item" data-panel="panel-aman">
-                <i class='bx bx-building-house'></i> Bangunan Aman
-            </a>
-            
-            <div class="nav-section-title">Sistem</div>
-            <a href="#" class="nav-item" data-panel="panel-about">
-                <i class='bx bx-info-circle'></i> Tentang Sistem
-            </a>
-        </div>
-    </aside>
+  <!-- ============================================ -->
+  <!-- HERO                                         -->
+  <!-- ============================================ -->
+  <section class="hero" id="hero">
+    <div class="hero-image-wrapper" id="heroImageWrap">
+      <img src="gam1.png" alt="Perbukitan berkabut Lampung" class="hero-image" id="heroImage"/>
+    </div>
 
-    <!-- MAIN CONTENT -->
-    <main class="main">
+    <div class="hero-cursor-overlay" id="heroCursorOverlay">
+      <img src="gam2.png" alt="Overlay Hero"/>
+    </div>
+
+    <div class="hero-gradient"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow" id="heroEyebrow">Sistem Informasi Mitigasi Bencana</div>
+      <h1 class="hero-title" id="heroTitle">
         
-        <!-- STATS BAR -->
-        <div class="stats-bar">
-            <div class="stat-card">
-                <div class="stat-icon red"><i class='bx bx-landscape'></i></div>
-                <div class="stat-info">
-                    <h3 id="stat-kejadian">3</h3>
-                    <p>Total Kejadian Longsor</p>
-                </div>
+        <span class="line"><span class="line-inner">WARLO</span></span>
+      </h1>
+      <p class="hero-tagline" id="heroTagline">
+        Lepaskan diri dari ketidaktahuan. Pantau kabut rendah di lereng curam, rasakan getaran tanah di bawah kaki, dan langkahkan kaki ke wilayah yang perlu Anda ketahui.
+      </p>
+    </div>
+    <div class="hero-scroll-indicator" id="heroScroll">
+      <div class="hero-scroll-line"></div>
+      <span class="hero-scroll-text">Gulir ke bawah</span>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- CREAM WRAPPER: quote + ironhill + splitTujuan-->
+  <!-- SVG garis organic mengalir di belakang semua -->
+  <!-- ============================================ -->
+  <div id="cream-line-wrapper" style="position:relative; overflow:hidden;">
+
+    <!-- SVG GARIS ORGANIC — absolute, z-index rendah, tertutup section gelap secara alami -->
+    <svg id="organicLineSvg" viewBox="0 0 1000 3000" preserveAspectRatio="xMidYMid meet"
+      style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;">
+      <path class="squiggly-path"
+        d="
+          M 620,0
+          C 700,80   820,160  780,300
+          C 740,430  560,460  480,580
+          C 400,700  260,720  180,860
+          C 100,1000 200,1100  340,1180
+          C 480,1260 680,1240  760,1360
+          C 840,1480 820,1620  700,1720
+          C 580,1820 380,1820  260,1940
+          C 140,2060 120,2200  240,2300
+          C 360,2400 580,2380  660,2500
+          C 740,2620 700,2780  620,2880
+          C 560,2950 480,2980  440,3000
+        "
+        fill="none"
+        stroke="var(--olive-light)"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+
+    <!-- ============================================ -->
+    <!-- QUOTE                                        -->
+    <!-- ============================================ -->
+    <section class="quote-section" id="tentang">
+      <div class="quote-inner">
+        <span class="quote-mark">"</span>
+        <p class="quote-text" id="quoteText">
+          Menghadapi potensi bencana alam bukan tentang kepanikan, melainkan tentang kesiapan data spasial yang cepat, presisi, dan mudah dipahami oleh setiap lapisan masyarakat.
+        </p>
+        <div class="quote-attribution">WARLO &mdash; Platform Mitigasi Geospasial</div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- IRONHILL LARGE TEXT                          -->
+    <!-- ============================================ -->
+    <section class="ironhill-text-section" style="overflow:visible;">
+      <div class="ironhill-text-content">
+        <p class="ironhill-large-text">
+          <span class="word">DI</span> <span class="word">SINI,</span> <span class="word">TEMAN,</span> <span class="word">ADALAH</span> <span class="word">TEMPAT</span> <span class="word">DI</span> <span class="word">MANA</span> <span class="word">PIKIRAN</span> <span class="word">YANG</span> <span class="word">KACAU</span> <span class="word">BERUBAH</span> <span class="word">MENJADI</span> <span class="word">PEMIKIRAN</span> <span class="word">YANG</span> <span class="word">JERNIH,</span> <span class="word">SEBUAH</span> <span class="word">RUANG</span> <span class="word">KARYA</span> <span class="word">ALAM</span> <span class="word">-</span> <span class="word">DI</span> <span class="word">MANA</span> <span class="word">BUAH</span> <span class="word">DARI</span> <span class="word">UPAYAMU</span> <span class="word">DAPAT</span> <span class="word">DIPETIK</span> <span class="word">DARI</span> <span class="word">AKARNYA.</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- SPLIT SECTION 1: Tujuan                     -->
+    <!-- ============================================ -->
+    <section class="split-section" id="splitTujuan">
+    <div class="split-image-side">
+      <img src="https://tribratanews.lampung.polri.go.id/berkas/post/gD8j5fxAE1WUQW30q4ZQ7gmOqyQLT9jve85bqNwL.jpg" alt="Perbukitan terjal Lampung" class="reveal-scale"/>
+    </div>
+    <div class="split-text-side" style="background: var(--cream);">
+      <div class="text-subheading label reveal" style="color: var(--terracotta);">Tujuan Sistem</div>
+      <h2 class="text-heading reveal">Mewujudkan Kesiapsiagaan Melalui Data Spasial</h2>
+      <p class="text-body reveal" style="margin-top: 1.5rem; color: rgba(52, 65, 40, 0.65);">
+        Memberikan informasi kebencanaan yang cepat, akurat, dan dapat diakses dengan mudah mengenai titik rawan bencana tanah longsor di seluruh wilayah Kabupaten Lampung. Membantu masyarakat mengenali potensi ancaman bahaya di lingkungan sekitar mereka.
+      </p>
+      <div class="divider reveal" style="margin: 3rem 0 0 0;"></div>
+      <p class="text-body reveal" style="margin-top: 1.5rem; color: rgba(52, 65, 40, 0.45); font-size: 0.8rem;">
+        Meningkatkan kewaspadaan dini masyarakat melalui visualisasi kerawanan spasial yang ramah pengguna, guna meminimalisir risiko jatuhnya korban jiwa dan dampak kerugian material.
+      </p>
+    </div>
+  </section><!-- end splitTujuan -->
+
+  </div><!-- end #cream-line-wrapper -->
+
+  <!-- ============================================ -->
+  <!-- FULL IMAGE: Longsor                          -->
+  <!-- ============================================ -->
+  <section class="full-image-section" id="fullImageLongsor">
+    <img src="section_landslide.png" alt="Tanah longsor" id="parallaxLongsor"/>
+    <div class="full-image-overlay"></div>
+    <div class="full-image-content">
+      <div class="text-subheading reveal" style="color: var(--gold); margin-bottom: 1.5rem;">Ancaman Nyata</div>
+      <h2 class="text-display reveal" style="color: var(--cream);">Di Balik<br/>Keindahan Lereng</h2>
+      <p class="text-body reveal" style="color: rgba(244, 237, 221, 0.5); max-width: 480px; margin-top: 2rem;">
+        Setiap tahun, puluhan titik di Lampung mengalami pergerakan tanah. Data historis menunjukkan pola yang berulang di kawasan Bukit Barisan, Tanggamus, dan pesisir barat.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SPLIT SECTION 2 (reversed): Fungsi           -->
+  <!-- ============================================ -->
+  <section class="split-section" id="splitFungsi">
+    <div class="split-text-side" style="background: var(--olive-dark); color: var(--cream);">
+      <div class="text-subheading label reveal" style="color: var(--gold);">Fungsi Utama</div>
+      <h2 class="text-heading reveal" style="color: var(--cream);">Panduan Taktis Rute Evakuasi Mandiri</h2>
+      <p class="text-body reveal" style="margin-top: 1.5rem; color: rgba(244, 237, 221, 0.5);">
+        Membantu masyarakat mengenali potensi ancaman bahaya longsor di lingkungan sekitar, serta menyediakan langkah mitigasi dan panduan taktis untuk menemukan fasilitas kesehatan dan posko evakuasi terdekat.
+      </p>
+    </div>
+    <div class="split-image-side">
+      <img src="https://tribratanews.lampung.polri.go.id/berkas/post/gD8j5fxAE1WUQW30q4ZQ7gmOqyQLT9jve85bqNwL.jpg" alt="Desa di antara perbukitan Lampung" class="reveal-scale"/>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- FEATURES SECTION                             -->
+  <!-- ============================================ -->
+  <section class="features-section" id="fitur">
+    <div class="features-header">
+      <div class="text-subheading label">Apa yang Kami Tawarkan</div>
+      <h2 class="text-heading" style="color: var(--cream);">Fitur Utama Sistem</h2>
+    </div>
+    <div class="features-grid">
+
+      <!-- Card 1 -->
+      <div class="feature-col" ontouchstart="this.classList.toggle('hover');">
+        <div class="feature-card">
+          <div class="feature-card-front" style="background-image: url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&q=80');">
+            <div class="feature-inner">
+              <span class="feature-number">01</span>
+              <span class="feature-title">Visualisasi Risiko</span>
+              <span class="feature-sub">Hover untuk detail</span>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon orange"><i class='bx bx-error'></i></div>
-                <div class="stat-info">
-                    <h3 id="stat-zona">-</h3>
-                    <p>Zona Risiko Longsor</p>
-                </div>
+          </div>
+          <div class="feature-card-back">
+            <div class="feature-inner">
+              <span class="feature-back-title">Visualisasi Risiko</span>
+              <span class="feature-desc">Menampilkan peta risiko longsor dengan pembagian area bahaya, waspada, dan aman berdasarkan standar data spasial dan analisis kemiringan lereng.</span>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon green"><i class='bx bx-home-heart'></i></div>
-                <div class="stat-info">
-                    <h3 id="stat-posko">-</h3>
-                    <p>Titik Safe Zone</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon blue"><i class='bx bx-plus-medical'></i></div>
-                <div class="stat-info">
-                    <h3 id="stat-faskes">-</h3>
-                    <p>Fasilitas Kesehatan</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon purple"><i class='bx bx-map-pin'></i></div>
-                <div class="stat-info">
-                    <h3 id="stat-kabupaten">15</h3>
-                    <p>Kab/Kota Terpantau</p>
-                </div>
-            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- MAP WRAPPER -->
-        <div class="map-wrap">
-            <div id="map"></div>
-
-            <!-- LOCATE ME BUTTON (Top Right) -->
-            <button class="locate-me-btn" id="locateMeBtn" title="Lokasi Saya">
-                <i class='bx bx-target-lock'></i>
-            </button>
-
-            <!-- LAYER CONTROLS (Top Right) -->
-            <div class="layer-controls">
-                <button class="layer-toggle-btn" id="layerToggleBtn">
-                    <i class='bx bx-layer'></i> Layer Peta <i class='bx bx-chevron-down' style="margin-left: auto; font-size: 14px;"></i>
-                </button>
-                <div class="layer-dropdown" id="layerDropdown">
-                    <label class="layer-option">
-                        <input type="checkbox" id="toggleZona" checked> Zona Kerawanan
-                    </label>
-                    <label class="layer-option">
-                        <input type="checkbox" id="toggleJalur" checked> Jalur Evakuasi
-                    </label>
-                    <label class="layer-option">
-                        <input type="checkbox" id="toggleSafe" checked> Titik Safe Zone
-                    </label>
-                </div>
+      <!-- Card 2 -->
+      <div class="feature-col" ontouchstart="this.classList.toggle('hover');">
+        <div class="feature-card">
+          <div class="feature-card-front" style="background-image: url('https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?w=600&q=80');">
+            <div class="feature-inner">
+              <span class="feature-number">02</span>
+              <span class="feature-title">Pemetaan Fasilitas</span>
+              <span class="feature-sub">Hover untuk detail</span>
             </div>
-
-            <!-- MAP LEGEND (Bottom Right) -->
-            <div class="map-legend">
-                <h4><i class='bx bx-list-ul'></i> Legenda Peta</h4>
-                
-                <div style="margin-bottom: 8px; font-weight: 600; font-size: 11px; margin-top: 8px;">Zona Kerawanan Longsor</div>
-                <div class="legend-item"><div class="legend-rect" style="background: #EF4444;"></div> Risiko Tinggi</div>
-                <div class="legend-item"><div class="legend-rect" style="background: #F59E0B;"></div> Risiko Sedang</div>
-                <div class="legend-item"><div class="legend-rect" style="background: #22C55E;"></div> Risiko Rendah</div>
-                
-                <div style="margin-bottom: 8px; font-weight: 600; font-size: 11px; margin-top: 12px;">Infrastruktur Evakuasi</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #EA580C;"></div> Posko Evakuasi</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #16A34A;"></div> Titik Kumpul (Safe Zone)</div>
-                <div class="legend-item"><div class="legend-line" style="background: #2563EB;"></div> Jalur Evakuasi Utama</div>
-                <div class="legend-item"><div class="legend-line" style="background: #0EA5E9; border-top: 2px dashed #fff;"></div> Jalur Alternatif</div>
-                
-                <div style="margin-bottom: 8px; font-weight: 600; font-size: 11px; margin-top: 12px;">Fasilitas Bawaan</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #ff0000; width: 8px; height: 8px;"></div> Rumah Sakit / Klinik</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #ffffff; width: 8px; height: 8px;"></div> Balai Desa</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #00ff00; width: 8px; height: 8px;"></div> Apotek & Obat</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #ffd700; width: 8px; height: 8px;"></div> Praktik Dokter</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #ff66cc; width: 8px; height: 8px;"></div> Pasar Logistik</div>
-                <div class="legend-item"><div class="legend-dot" style="background: #00b0ff; width: 8px; height: 8px;"></div> Sumber Air Darurat</div>
+          </div>
+          <div class="feature-card-back">
+            <div class="feature-inner">
+              <span class="feature-back-title">Pemetaan Fasilitas</span>
+              <span class="feature-desc">Menampilkan lokasi rumah sakit, puskesmas, dan apotek terdekat sebagai titik tujuan evakuasi medis yang terintegrasi dengan sistem navigasi.</span>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- PANELS -->
-            
-            <!-- PANEL: HISTORI -->
-            <div class="side-panel" id="panel-histori">
-                <div class="panel-header">
-                    <h3>Histori Longsor</h3>
-                    <button class="panel-close"><i class='bx bx-x'></i></button>
-                </div>
-                <div class="panel-body">
-                    <div class="history-filters">
-                        <select class="filter-select">
-                            <option>Semua Tahun</option>
-                            <option>2026</option>
-                            <option>2025</option>
-                            <option>2024</option>
-                        </select>
-                        <select class="filter-select">
-                            <option>Semua Kab/Kota</option>
-                            <option>Tanggamus</option>
-                            <option>Lampung Barat</option>
-                            <option>Pesisir Barat</option>
-                        </select>
-                    </div>
-                    
-                    <div class="timeline">
-                        <div class="timeline-item" data-lat="-5.45" data-lng="104.60">
-                            <div class="timeline-date">12 Mei 2026</div>
-                            <div class="timeline-title">Longsor Jalan Lintas Barat</div>
-                            <div class="timeline-desc">Material menutupi jalan utama Tanggamus-Pesisir Barat sepanjang 50m.</div>
-                            <span class="timeline-badge badge-high">Risiko Tinggi</span>
-                        </div>
-                        <div class="timeline-item" data-lat="-5.02" data-lng="104.10">
-                            <div class="timeline-date">3 April 2026</div>
-                            <div class="timeline-title">Longsor Pemukiman Liwa</div>
-                            <div class="timeline-desc">Tanah bergerak mengancam 4 rumah di lereng bukit Liwa.</div>
-                            <span class="timeline-badge badge-medium">Risiko Sedang</span>
-                        </div>
-                        <div class="timeline-item" data-lat="-5.38" data-lng="104.98">
-                            <div class="timeline-date">28 Jan 2026</div>
-                            <div class="timeline-title">Amblesan Tanah Gisting</div>
-                            <div class="timeline-desc">Retakan tanah muncul pasca hujan deras 3 hari berturut-turut.</div>
-                            <span class="timeline-badge badge-medium">Risiko Sedang</span>
-                        </div>
-                    </div>
-                </div>
+      <!-- Card 3 -->
+      <div class="feature-col" ontouchstart="this.classList.toggle('hover');">
+        <div class="feature-card">
+          <div class="feature-card-front" style="background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80');">
+            <div class="feature-inner">
+              <span class="feature-number">03</span>
+              <span class="feature-title">Peringatan Geofencing</span>
+              <span class="feature-sub">Hover untuk detail</span>
             </div>
-
-            <!-- PANEL: BANGUNAN AMAN -->
-            <div class="side-panel" id="panel-aman">
-                <div class="panel-header">
-                    <h3>Bangunan Aman Lereng</h3>
-                    <button class="panel-close"><i class='bx bx-x'></i></button>
-                </div>
-                <div class="panel-body">
-                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6;">Panduan teknis mendirikan bangunan di daerah dengan kemiringan tanah berisiko menurut standar BNPB.</p>
-                    
-                    <div class="building-grid">
-                        <div class="building-card">
-                            <i class='bx bx-layer'></i>
-                            <h4>Pondasi Dalam</h4>
-                            <p>Gunakan tiang pancang mencapai batuan keras (bedrock).</p>
-                        </div>
-                        <div class="building-card">
-                            <i class='bx bx-cube'></i>
-                            <h4>Material Ringan</h4>
-                            <p>Kurangi beban lereng dengan baja ringan, kayu, atau GRC.</p>
-                        </div>
-                        <div class="building-card">
-                            <i class='bx bx-shape-square'></i>
-                            <h4>Struktur Fleksibel</h4>
-                            <p>Sistem join bangunan yang bisa mentolerir pergerakan tanah mikro.</p>
-                        </div>
-                        <div class="building-card">
-                            <i class='bx bx-run'></i>
-                            <h4>Jalur Darurat</h4>
-                            <p>Pintu keluar mengarah berlawanan dari tebing utama.</p>
-                        </div>
-                    </div>
-                </div>
+          </div>
+          <div class="feature-card-back">
+            <div class="feature-inner">
+              <span class="feature-back-title">Peringatan Geofencing</span>
+              <span class="feature-desc">Notifikasi otomatis kepada pengguna jika posisi mereka terdeteksi memasuki radius zona rawan longsor berdasarkan pemantauan GPS real-time.</span>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- PANEL: ABOUT -->
-            <div class="side-panel" id="panel-about">
-                <div class="panel-header">
-                    <h3>Tentang WARLO</h3>
-                    <button class="panel-close"><i class='bx bx-x'></i></button>
-                </div>
-                <div class="panel-body">
-                    <div class="about-section">
-                        <h4><i class='bx bx-target-lock'></i> Tujuan Sistem</h4>
-                        <p>Web-GIS WARLO (Warning Longsor) adalah dashboard operasional instansi pemerintah (BPBD/BNPB) Provinsi Lampung untuk monitoring, pemetaan fasilitas evakuasi, dan media edukasi publik berfokus khusus pada mitigasi bencana tanah longsor.</p>
-                    </div>
-                    <div class="about-section">
-                        <h4><i class='bx bx-data'></i> Sumber Data</h4>
-                        <p>Data spasial terhubung dengan database PostGIS lokal. Peta menggunakan basemap ringan CartoDB. Layer tambahan seperti rumah sakit, apotek, dan posko menggunakan standar GeoJSON OGC.</p>
-                    </div>
-                    <div class="about-section" style="margin-top: 30px; text-align: center; border-top: 1px dashed var(--border); padding-top: 20px;">
-                        <p style="font-size: 11px; font-weight: 600;">Sistem Informasi Geografis Berbasis Web<br>Provinsi Lampung © 2026</p>
-                    </div>
-                </div>
+      <!-- Card 4 -->
+      <div class="feature-col" ontouchstart="this.classList.toggle('hover');">
+        <div class="feature-card">
+          <div class="feature-card-front" style="background-image: url('https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80');">
+            <div class="feature-inner">
+              <span class="feature-number">04</span>
+              <span class="feature-title">Kontak Darurat SOS</span>
+              <span class="feature-sub">Hover untuk detail</span>
             </div>
-
-            <!-- PANEL EDUKASI 1: CIRI AWAL -->
-            <div class="side-panel" id="panel-ciri">
-                <div class="panel-header">
-                    <h3>Ciri-ciri Awal Longsor</h3>
-                    <button class="panel-close"><i class='bx bx-x'></i></button>
-                </div>
-                <div class="panel-body">
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #FFF7ED; color: #EA580C;"><i class='bx bx-objects-horizontal-left'></i></div>
-                            <h4>Retakan Tanah</h4>
-                        </div>
-                        <ul>
-                            <li>Munculnya retakan memanjang di permukaan tanah, tebing, atau jalan.</li>
-                            <li>Retakan biasanya berbentuk melengkung searah tebing.</li>
-                        </ul>
-                    </div>
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #F0FDF4; color: #16A34A;"><i class='bx bx-leaf'></i></div>
-                            <h4>Pohon Miring</h4>
-                        </div>
-                        <ul>
-                            <li>Pohon, tiang listrik, atau pagar tampak mendadak miring.</li>
-                            <li>Pintu atau jendela rumah tiba-tiba sulit dibuka/ditutup akibat pergeseran tanah.</li>
-                        </ul>
-                    </div>
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #EFF6FF; color: #2563EB;"><i class='bx bx-water'></i></div>
-                            <h4>Mata Air Keruh</h4>
-                        </div>
-                        <ul>
-                            <li>Air sumur atau mata air tiba-tiba menjadi sangat keruh.</li>
-                            <li>Muncul mata air baru secara mendadak di lereng atau rembesan air tak wajar.</li>
-                        </ul>
-                    </div>
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #FEF2F2; color: #DC2626;"><i class='bx bx-volume-full'></i></div>
-                            <h4>Gemuruh dari Lereng</h4>
-                        </div>
-                        <ul>
-                            <li>Terdengar suara gemuruh, dentuman, atau pohon patah dari arah bukit/tebing.</li>
-                        </ul>
-                    </div>
-                </div>
+          </div>
+          <div class="feature-card-back">
+            <div class="feature-inner">
+              <span class="feature-back-title">Kontak Darurat SOS</span>
+              <span class="feature-desc">Tombol pintas untuk melakukan panggilan cepat ke pihak berwenang BPBD dan Kepolisian saat terjadi kondisi darurat bencana alam.</span>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- PANEL EDUKASI 2: SEBELUM LONGSOR -->
-            <div class="side-panel" id="panel-sebelum">
-                <div class="panel-header">
-                    <h3>Sebelum Longsor (Pencegahan)</h3>
-                    <button class="panel-close"><i class='bx bx-x'></i></button>
-                </div>
-                <div class="panel-body">
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #F0FDF4; color: #16A34A;"><i class='bx bx-shape-polygon'></i></div>
-                            <h4>Sistem Terasering</h4>
-                        </div>
-                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; padding-bottom: 10px;">Mengubah lereng yang miring menjadi bertingkat-tingkat untuk menahan erosi dan laju aliran air permukaan.</p>
-                    </div>
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #F0FDF4; color: #16A34A;"><i class='bx bxl-flutter'></i></div>
-                            <h4>Vegetasi Akar Dalam</h4>
-                        </div>
-                        <ul>
-                            <li>Penanaman Rumput Vetiver (Akar Wangi) yang akarnya menembus tanah hingga 3-4 meter.</li>
-                            <li>Penanaman Bambu di sepanjang bibir sungai/tebing lereng.</li>
-                        </ul>
-                    </div>
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #EFF6FF; color: #2563EB;"><i class='bx bx-droplet'></i></div>
-                            <h4>Drainase Permukaan</h4>
-                        </div>
-                        <ul>
-                            <li>Membangun saluran air (drainase) agar air hujan tidak menggenang atau meresap langsung ke titik lemah lereng.</li>
-                        </ul>
-                    </div>
-                </div>
+      <!-- Card 5 -->
+      <div class="feature-col" ontouchstart="this.classList.toggle('hover');">
+        <div class="feature-card">
+          <div class="feature-card-front" style="background-image: url('https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=600&q=80');">
+            <div class="feature-inner">
+              <span class="feature-number">05</span>
+              <span class="feature-title">Multi-Basemap</span>
+              <span class="feature-sub">Hover untuk detail</span>
             </div>
-
-            <!-- PANEL EDUKASI 3: SAAT LONGSOR -->
-            <div class="side-panel" id="panel-saat">
-                <div class="panel-header">
-                    <h3>Saat Terjadi Longsor</h3>
-                    <button class="panel-close"><i class='bx bx-x'></i></button>
-                </div>
-                <div class="panel-body">
-                    <div class="edu-card" style="border-left: 4px solid var(--danger);">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #FEF2F2; color: #DC2626;"><i class='bx bx-run'></i></div>
-                            <h4>Evakuasi Cepat</h4>
-                        </div>
-                        <ul>
-                            <li>Segera tinggalkan rumah dan jangan membawa barang bawaan berat. Fokus pada nyawa.</li>
-                            <li>Berlari menjauhi arah datangnya pergerakan tanah/tebing.</li>
-                        </ul>
-                    </div>
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #FFF7ED; color: #EA580C;"><i class='bx bx-directions'></i></div>
-                            <h4>Arah Penyelamatan</h4>
-                        </div>
-                        <ul>
-                            <li>Hindari menyeberangi lembah. Menghindarlah ke daerah tinggi atau lateral (menyamping) dari jalur longsor.</li>
-                            <li>Jauhi bantaran sungai karena longsoran sering berubah menjadi aliran puing.</li>
-                        </ul>
-                    </div>
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #F8FAFC; color: #64748B;"><i class='bx bx-shield-quarter'></i></div>
-                            <h4>Jika Terjebak</h4>
-                        </div>
-                        <ul>
-                            <li>Posisikan tubuh meringkuk seperti bola.</li>
-                            <li>Lindungi kepala dan leher menggunakan kedua tangan atau benda padat terdekat.</li>
-                        </ul>
-                    </div>
-                </div>
+          </div>
+          <div class="feature-card-back">
+            <div class="feature-inner">
+              <span class="feature-back-title">Multi-Basemap</span>
+              <span class="feature-desc">Pilihan tampilan peta Satelit, Peta Jalan, atau Peta Gelap untuk memudahkan analisis visual sesuai kebutuhan pengguna di lapangan.</span>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- PANEL EDUKASI 4: SESUDAH LONGSOR -->
-            <div class="side-panel" id="panel-sesudah">
-                <div class="panel-header">
-                    <h3>Sesudah Longsor</h3>
-                    <button class="panel-close"><i class='bx bx-x'></i></button>
-                </div>
-                <div class="panel-body">
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #FEF2F2; color: #DC2626;"><i class='bx bx-radar'></i></div>
-                            <h4>Waspada Longsor Susulan</h4>
-                        </div>
-                        <ul>
-                            <li>Jangan segera kembali ke rumah atau mendekati area longsoran. Struktur tanah masih labil.</li>
-                        </ul>
-                    </div>
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #EFF6FF; color: #2563EB;"><i class='bx bx-phone-call'></i></div>
-                            <h4>Tindakan Darurat</h4>
-                        </div>
-                        <ul>
-                            <li>Hubungi posko darurat BNPB/BPBD atau instansi terkait via dashboard WARLO.</li>
-                            <li>Lakukan pelaporan korban jiwa/hilang di posko titik kumpul (Safe Zone).</li>
-                        </ul>
-                    </div>
-                    <div class="edu-card">
-                        <div class="edu-card-header">
-                            <div class="edu-card-icon" style="background: #FFF7ED; color: #EA580C;"><i class='bx bx-water'></i></div>
-                            <h4>Pemeriksaan Aliran Sungai</h4>
-                        </div>
-                        <ul>
-                            <li>Periksa apakah material longsoran membendung sungai (menjadi bendung alam). Jika iya, segera lapor ke pihak berwenang karena rawan memicu banjir bandang.</li>
-                        </ul>
-                    </div>
-                </div>
+      <!-- Card 6 -->
+      <div class="feature-col" ontouchstart="this.classList.toggle('hover');">
+        <div class="feature-card">
+          <div class="feature-card-front" style="background-image: url('https://images.unsplash.com/photo-1488998527040-85054a85150e?w=600&q=80');">
+            <div class="feature-inner">
+              <span class="feature-number">06</span>
+              <span class="feature-title">Mode Simulasi</span>
+              <span class="feature-sub">Hover untuk detail</span>
             </div>
+          </div>
+          <div class="feature-card-back">
+            <div class="feature-inner">
+              <span class="feature-back-title">Mode Simulasi</span>
+              <span class="feature-desc">Fitur untuk menguji skema penyelamatan dengan cara menentukan titik lokasi secara manual di peta dan melihat rute evakuasi terbaik.</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        </div> <!-- /.map-wrap -->
-    </main>
+    </div>
+  </section>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    <script src="assets/app.js"></script>
+  <!-- ============================================ -->
+  <!-- DATA SECTION (Horizontal Scroll)             -->
+  <!-- ============================================ -->
+  <section class="data-section" id="data" style="position:relative; overflow:hidden;">
+    <!-- SVG garis organic untuk section data (cream) -->
+    <svg id="organicLineSvg2" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet"
+      style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;">
+      <path class="squiggly-path-2"
+        d="
+          M 200,0
+          C 120,80   60,180   160,280
+          C 260,380  500,360  600,460
+          C 700,560  780,640  680,720
+          C 620,770  520,790  440,800
+        "
+        fill="none"
+        stroke="var(--olive-light)"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+    <div class="data-header" style="position:relative;z-index:2;">
+      <div class="text-subheading reveal" style="color: var(--terracotta); margin-bottom: 1.5rem;">Infrastruktur Data</div>
+      <h2 class="text-heading reveal">Integrasi Basis Data Geospasial</h2>
+    </div>
+    <div class="data-track" id="dataTrack" style="position:relative;z-index:2;">
+      <div class="data-card">
+        <div class="data-card-accent"></div>
+        <h3>Data Histori Kejadian</h3>
+        <p>Rekam jejak kejadian longsor di Lampung yang digunakan sebagai referensi acuan bahaya dan analisis pola kerawanan berulang.</p>
+        <div class="data-card-stat">
+          <div class="data-card-stat-item">
+            <div class="val">127+</div>
+            <div class="lbl">Kejadian Tercatat</div>
+          </div>
+          <div class="data-card-stat-item">
+            <div class="val">15</div>
+            <div class="lbl">Kabupaten Terpantau</div>
+          </div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-accent"></div>
+        <h3>Zonasi Kerawanan</h3>
+        <p>Pemetaan wilayah berdasarkan tingkat kerawanan menggunakan metode spatial buffering dan analisis radius zona bahaya tebing curam.</p>
+        <div class="data-card-stat">
+          <div class="data-card-stat-item">
+            <div class="val">3</div>
+            <div class="lbl">Level Zonasi</div>
+          </div>
+          <div class="data-card-stat-item">
+            <div class="val">500m</div>
+            <div class="lbl">Radius Buffer</div>
+          </div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-accent"></div>
+        <h3>Integrasi Fasilitas</h3>
+        <p>Data sarana pendukung kesehatan dan posko evakuasi yang terhubung dengan sistem pemetaan untuk navigasi jalur tercepat.</p>
+        <div class="data-card-stat">
+          <div class="data-card-stat-item">
+            <div class="val">15+</div>
+            <div class="lbl">RSUD Rujukan</div>
+          </div>
+          <div class="data-card-stat-item">
+            <div class="val">38+</div>
+            <div class="lbl">Puskesmas Siaga</div>
+          </div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-accent"></div>
+        <h3>Peta Tematik Real-time</h3>
+        <p>Visualisasi data geospasial tematik meliputi curah hujan, kemiringan lereng, jenis tanah, dan tutupan lahan wilayah Lampung.</p>
+        <div class="data-card-stat">
+          <div class="data-card-stat-item">
+            <div class="val">4</div>
+            <div class="lbl">Layer Tematik</div>
+          </div>
+          <div class="data-card-stat-item">
+            <div class="val">24/7</div>
+            <div class="lbl">Pembaruan Data</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <<!-- ============================================ -->
+  <!-- CTA SECTION                                  -->
+  <!-- ============================================ -->
+  <section class="cta-section" id="aksi">
+    <canvas id="cta-canvas" class="cta-bg-canvas"></canvas>
+    <div class="cta-content">
+      <div class="text-subheading reveal" style="color: var(--gold); margin-bottom: 1.5rem;">Langkah Awal Keselamatan</div>
+      <h2 class="text-heading reveal">Akses Informasi Bencana yang Tepat Dimulai dari Sini</h2>
+      <p class="text-body reveal">Dapatkan informasi geospasial zonasi wilayah rawan longsor secara instan. Rencanakan langkah evakuasi Anda dan keluarga.</p>
+      <a href="../WARLO_RE/user/peta.html" class="cta-button reveal">Masuk ke Dashboard Sistem</a>
+    </div>
+    
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SCRIPTS                                      -->
+  <!-- ============================================ -->
+  <script>
+  (function() {
+    'use strict';
+
+    // ==========================================
+    // CUSTOM CURSOR
+    // ==========================================
+    const dot = document.getElementById('cursorDot');
+    const ring = document.getElementById('cursorRing');
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let dx = mx, dy = my, rx = mx, ry = my;
+
+    window.addEventListener('mousemove', (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+    });
+
+    // Expand cursor on hoverable elements
+    document.querySelectorAll('a, button, .feature-col, .cta-button, .data-card').forEach(el => {
+      el.addEventListener('mouseenter', () => dot.classList.add('expanded'));
+      el.addEventListener('mouseleave', () => dot.classList.remove('expanded'));
+    });
+
+    function updateCursor() {
+      dx += (mx - dx) * 0.2;
+      dy += (my - dy) * 0.2;
+      rx += (mx - rx) * 0.08;
+      ry += (my - ry) * 0.08;
+
+      dot.style.left = dx + 'px';
+      dot.style.top = dy + 'px';
+      ring.style.left = rx + 'px';
+      ring.style.top = ry + 'px';
+
+      requestAnimationFrame(updateCursor);
+    }
+    updateCursor();
+
+    // Toggle dark/light cursor based on section
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const isDark = entry.target.classList.contains('hero') ||
+                         entry.target.classList.contains('features-section') ||
+                         entry.target.classList.contains('cta-section') ||
+                         entry.target.classList.contains('full-image-section');
+          dot.classList.toggle('on-dark', isDark);
+          ring.classList.toggle('on-dark', isDark);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('section, .hero, footer').forEach(s => observer.observe(s));
+
+    // ==========================================
+    // LENIS SMOOTH SCROLL
+    // ==========================================
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smooth: true,
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    // Sync Lenis with GSAP ScrollTrigger
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+
+    // ==========================================
+    // LOADING SCREEN ANIMATION
+    // ==========================================
+    gsap.registerPlugin(ScrollTrigger);
+
+    const loaderTl = gsap.timeline({
+      onComplete: () => {
+        document.getElementById('loader').style.display = 'none';
+        // Trigger hero entrance
+        heroEntrance();
+      }
+    });
+
+    loaderTl
+      .to('#loaderTitle', { opacity: 1, duration: 0.8, ease: 'power2.out' })
+      .to('#loaderSub', { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.3')
+      .to('#loaderBarTrack', { opacity: 1, duration: 0.3 }, '-=0.2')
+      .to('#loaderBarFill', { width: '100%', duration: 1.8, ease: 'power1.inOut' }, '-=0.1')
+      .to('#loader', {
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power2.inOut',
+        delay: 0.2
+      });
+
+    // ==========================================
+    // HERO ENTRANCE
+    // ==========================================
+    function heroEntrance() {
+      const tl = gsap.timeline();
+
+      tl
+        .to('#heroImage', { opacity: 1, duration: 1.5, ease: 'power2.out' })
+        .to('.hero-title .line-inner', {
+          y: '0%',
+          duration: 1.2,
+          stagger: 0.12,
+          ease: 'power3.out'
+        }, '-=1')
+        .to('#heroEyebrow', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, '-=0.8')
+        .to('#heroTagline', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, '-=0.5')
+        .to('#heroScroll', { opacity: 1, duration: 0.6 }, '-=0.3');
+    }
+
+    // ==========================================
+    // HERO PARALLAX
+    // ==========================================
+    gsap.to('#heroImageWrap', {
+      y: '15%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#hero',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: 0.8
+      }
+    });
+
+
+
+    /* ============================================ */
+/* HERO SPOTLIGHT CURSOR EFFECT                 */
+/* ============================================ */
+
+const heroSection = document.getElementById("hero");
+const heroOverlay = document.getElementById("heroCursorOverlay");
+
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+
+let currentX = mouseX;
+let currentY = mouseY;
+
+const SPOTLIGHT_RADIUS = 220;
+
+window.addEventListener("mousemove", (e)=>{
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+
+heroSection.addEventListener("mouseenter", ()=>{
+  gsap.to(heroOverlay,{
+    opacity:1,
+    duration:0.35,
+    ease:"power3.out"
+  });
+});
+
+heroSection.addEventListener("mouseleave", ()=>{
+  gsap.to(heroOverlay,{
+    opacity:0,
+    duration:0.35,
+    ease:"power3.out"
+  });
+});
+
+(function spotlightLoop(){
+
+  currentX += (mouseX - currentX) * 0.08;
+  currentY += (mouseY - currentY) * 0.08;
+
+  const mask =
+    `radial-gradient(
+      circle ${SPOTLIGHT_RADIUS}px
+      at ${currentX}px ${currentY}px,
+      rgba(0,0,0,1) 0%,
+      rgba(0,0,0,.95) 35%,
+      rgba(0,0,0,.75) 55%,
+      rgba(0,0,0,.35) 72%,
+      rgba(0,0,0,.08) 88%,
+      transparent 100%
+    )`;
+
+  heroOverlay.style.maskImage = mask;
+  heroOverlay.style.webkitMaskImage = mask;
+
+  requestAnimationFrame(spotlightLoop);
+
+})();
+
+    // ==========================================
+    // QUOTE WORD-BY-WORD REVEAL
+    // ==========================================
+    const quoteEl = document.getElementById('quoteText');
+    const quoteHTML = quoteEl.innerHTML;
+    quoteEl.innerHTML = quoteHTML.split(/\s+/).map(w => `<span class="word">${w}</span>`).join(' ');
+
+    gsap.to('#quoteText .word', {
+      opacity: 1,
+      stagger: 0.04,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#tentang',
+        start: 'top 70%',
+        end: 'center 40%',
+        scrub: 1
+      }
+    });
+
+    // ==========================================
+    // IRONHILL LARGE TEXT & SVG LINE DRAW
+    // ==========================================
+    gsap.to('.ironhill-large-text .word', {
+      opacity: 1,
+      stagger: 0.04,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.ironhill-text-section',
+        start: 'top 60%',
+        end: 'bottom 80%',
+        scrub: 1
+      }
+    });
+
+    const path = document.querySelector('.squiggly-path');
+    if (path) {
+        const length = path.getTotalLength();
+        gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
+        gsap.to(path, {
+            strokeDashoffset: 0,
+            ease: "none",
+            scrollTrigger: {
+                trigger: '#cream-line-wrapper',
+                start: 'top 70%',
+                end: 'bottom 30%',
+                scrub: 1.5
+            }
+        });
+    }
+
+    const path2 = document.querySelector('.squiggly-path-2');
+    if (path2) {
+        const length2 = path2.getTotalLength();
+        gsap.set(path2, { strokeDasharray: length2, strokeDashoffset: length2 });
+        gsap.to(path2, {
+            strokeDashoffset: 0,
+            ease: "none",
+            scrollTrigger: {
+                trigger: '#data',
+                start: 'top 70%',
+                end: 'bottom 50%',
+                scrub: 1.5
+            }
+        });
+    }
+
+    // ==========================================
+    // GENERIC REVEAL ANIMATIONS
+    // ==========================================
+    gsap.utils.toArray('.reveal').forEach(el => {
+      gsap.to(el, {
+        opacity: 1,
+        y: 0,
+        duration: 1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          toggleActions: 'play none none none'
+        }
+      });
+    });
+
+    gsap.utils.toArray('.reveal-left').forEach(el => {
+      gsap.to(el, {
+        opacity: 1,
+        x: 0,
+        duration: 1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          toggleActions: 'play none none none'
+        }
+      });
+    });
+
+    // ==========================================
+    // SPLIT IMAGE PARALLAX + SCALE
+    // ==========================================
+    gsap.utils.toArray('.reveal-scale').forEach(img => {
+      gsap.to(img, {
+        scale: 1,
+        opacity: 1,
+        duration: 1.5,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: img.parentElement,
+          start: 'top 80%',
+          toggleActions: 'play none none none'
+        }
+      });
+
+      gsap.to(img, {
+        y: '-8%',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: img.parentElement,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: 0.6
+        }
+      });
+    });
+
+    // ==========================================
+    // FULL IMAGE PARALLAX
+    // ==========================================
+    gsap.to('#parallaxLongsor', {
+      y: '10%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#fullImageLongsor',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 0.6
+      }
+    });
+
+    // ==========================================
+    // FEATURE CARDS STAGGER
+    // ==========================================
+    gsap.utils.toArray('.feature-col').forEach((card, i) => {
+      gsap.fromTo(card,
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          delay: i * 0.1,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: '.features-grid',
+            start: 'top 75%',
+            toggleActions: 'play none none none'
+          }
+        }
+      );
+    });
+
+    // ==========================================
+    // DATA HORIZONTAL SCROLL
+    // ==========================================
+    const dataTrack = document.getElementById('dataTrack');
+    const dataCards = dataTrack.querySelectorAll('.data-card');
+    const totalScrollWidth = dataTrack.scrollWidth - window.innerWidth + 200;
+
+    gsap.to(dataTrack, {
+      x: () => -totalScrollWidth,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#data',
+        start: 'top 10%',
+        end: () => '+=' + totalScrollWidth,
+        scrub: 1,
+        pin: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true
+      }
+    });
+
+    // ==========================================
+    // THREE.JS PARTICLE BACKGROUND (CTA)
+    // ==========================================
+    (function initCTACanvas() {
+      const canvas = document.getElementById('cta-canvas');
+      if (!canvas) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 500);
+      camera.position.z = 30;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const count = 200;
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      const vel = new Float32Array(count * 3);
+
+      for (let i = 0; i < count; i++) {
+        pos[i * 3] = (Math.random() - 0.5) * 60;
+        pos[i * 3 + 1] = (Math.random() - 0.5) * 60;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * 30;
+        vel[i * 3] = (Math.random() - 0.5) * 0.008;
+        vel[i * 3 + 1] = (Math.random() - 0.5) * 0.008 + 0.005;
+        vel[i * 3 + 2] = (Math.random() - 0.5) * 0.005;
+      }
+
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+
+      // Create glow texture
+      const texCanvas = document.createElement('canvas');
+      texCanvas.width = 64; texCanvas.height = 64;
+      const ctx = texCanvas.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(196, 169, 106, 0.9)');
+      grad.addColorStop(0.3, 'rgba(196, 169, 106, 0.3)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 64, 64);
+
+      const mat = new THREE.PointsMaterial({
+        size: 1.5,
+        map: new THREE.CanvasTexture(texCanvas),
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        color: 0xC4A96A
+      });
+
+      const points = new THREE.Points(geo, mat);
+      scene.add(points);
+
+      let cmx = 0, cmy = 0;
+      window.addEventListener('mousemove', (e) => {
+        cmx = (e.clientX / window.innerWidth - 0.5) * 2;
+        cmy = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+
+      window.addEventListener('resize', () => {
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const p = geo.attributes.position.array;
+        for (let i = 0; i < count; i++) {
+          p[i * 3] += vel[i * 3];
+          p[i * 3 + 1] += vel[i * 3 + 1];
+          p[i * 3 + 2] += vel[i * 3 + 2];
+          if (p[i * 3 + 1] > 30) p[i * 3 + 1] = -30;
+          if (p[i * 3] > 30) p[i * 3] = -30;
+          if (p[i * 3] < -30) p[i * 3] = 30;
+        }
+        geo.attributes.position.needsUpdate = true;
+        points.rotation.y += 0.0003;
+        points.rotation.x = cmy * 0.15;
+        points.rotation.y += cmx * 0.0005;
+        renderer.render(scene, camera);
+      }
+      animate();
+    })();
+
+    // Smooth nav link scrolling
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) lenis.scrollTo(target, { offset: 0, duration: 1.5 });
+      });
+    });
+
+  })();
+  
+  /* ============================================ */
+/* QUOTE SCRUB TEXT                             */
+/* ============================================ */
+
+const quoteEl = document.getElementById('quoteText');
+
+if (quoteEl) {
+
+  const originalText = quoteEl.textContent.trim();
+
+  quoteEl.innerHTML = originalText
+    .split('')
+    .map(char => {
+      if (char === ' ') return ' ';
+      return `<span class="char">${char}</span>`;
+    })
+    .join('');
+
+  quoteEl.classList.add('scrub-ready');
+
+  gsap.to('#quoteText .char', {
+    color: 'var(--olive)',
+    stagger: 0.025,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '.quote-section',
+      start: 'top 75%',
+      end: 'bottom 40%',
+      scrub: 1
+    }
+  });
+
+}
+
+
+  </script>
 </body>
 </html>

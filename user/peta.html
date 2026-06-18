@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Peta Utama — WARLO</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── DESIGN TOKENS (sama dengan index1.html) ── */
+    :root {
+      --cream:       #F4EDDD;
+      --olive:       #344128;
+      --olive-light: #4A5A3A;
+      --olive-dark:  #1E2A16;
+      --brown:       #6A513F;
+      --terracotta:  #B56B46;
+      --gold:        #C4A96A;
+      --text-light:  #F4EDDD;
+      --text-dark:   #1E2A16;
+
+      /* aliases internal */
+      --panel-bg:    #1E2A16;
+      --panel-border: rgba(196,169,106,0.15);
+      --sidebar-w:   64px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%; overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: var(--olive-dark);
+      color: var(--cream);
+    }
+
+    /* ── LAYOUT ROOT ── */
+    #root { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ════════════════════════════════════════
+       SIDEBAR
+    ════════════════════════════════════════ */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--olive-dark);
+      border-right: 1px solid var(--panel-border);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 0; flex-shrink: 0; z-index: 500;
+      box-shadow: 2px 0 24px rgba(0,0,0,.35);
+    }
+
+    .sb-logo {
+      width: 40px; height: 40px;
+      background: transparent;
+      border: 1px solid var(--gold);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600; font-size: 15px; color: var(--gold);
+      text-decoration: none; letter-spacing: .05em;
+      margin-bottom: 28px;
+      transition: background .2s;
+    }
+    .sb-logo:hover { background: rgba(196,169,106,.1); }
+
+    .sb-menu { display: flex; flex-direction: column; gap: 4px; flex: 1; width: 100%; padding: 0 10px; }
+
+    .sb-item {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 10px 6px; border-radius: 6px; text-decoration: none;
+      color: rgba(244,237,221,.38); font-size: 8.5px; font-weight: 500;
+      text-align: center; letter-spacing: .05em; text-transform: uppercase;
+      transition: background .15s, color .15s;
+    }
+    .sb-item .sb-icon { font-size: 18px; }
+    .sb-item:hover { background: rgba(244,237,221,.06); color: rgba(244,237,221,.75); }
+    .sb-item.active { background: rgba(196,169,106,.12); color: var(--gold); }
+    .sb-item.active .sb-icon { color: var(--gold); }
+
+    .sb-bottom { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 10px; width: 100%; }
+
+    .sb-darurat {
+      width: 40px; height: 40px; background: #7f1d1d; border: 1px solid #ef4444;
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: #fca5a5; cursor: pointer;
+      animation: dpulse 2.5s infinite;
+    }
+    @keyframes dpulse {
+      0%,90%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); }
+      45%          { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+    }
+    .sb-darurat:hover { background: #991b1b; }
+
+    .sb-home {
+      width: 40px; height: 40px; background: transparent;
+      border: 1px solid var(--panel-border); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; cursor: pointer; text-decoration: none;
+      color: rgba(244,237,221,.35); transition: all .15s;
+    }
+    .sb-home:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ════════════════════════════════════════
+       APP WRAPPER
+    ════════════════════════════════════════ */
+    #app { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── TOPBAR ── */
+    #topbar {
+      height: 50px; background: var(--olive-dark);
+      border-bottom: 1px solid var(--panel-border);
+      display: flex; align-items: center; gap: 12px; padding: 0 18px;
+      flex-shrink: 0; z-index: 200;
+    }
+    #topbar h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px; font-weight: 400; color: var(--cream);
+      letter-spacing: .04em; flex: 1;
+    }
+    #topbar h1 span { color: var(--gold); }
+
+    .status-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 100px; font-size: 10px; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      background: rgba(34,197,94,.1); color: #4ade80;
+      border: 1px solid rgba(34,197,94,.25);
+    }
+    .status-chip.waspada { background: rgba(234,179,8,.1); color: #fbbf24; border-color: rgba(234,179,8,.25); }
+    .status-chip.bahaya  { background: rgba(239,68,68,.1);  color: #f87171;  border-color: rgba(239,68,68,.25);  }
+    .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ════════════════════════════════════════
+       STATS CARDS BAR
+    ════════════════════════════════════════ */
+    #statsbar {
+      background: var(--olive-dark);
+      border-bottom: 1px solid var(--panel-border);
+      padding: 10px 18px;
+      display: flex; gap: 12px; flex-shrink: 0;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    #statsbar::-webkit-scrollbar { display: none; }
+
+    .stat-card {
+      flex-shrink: 0;
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(244,237,221,.04);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px; padding: 10px 16px;
+      min-width: 160px; cursor: default;
+      transition: border-color .2s, background .2s;
+    }
+    .stat-card:hover {
+      border-color: rgba(196,169,106,.35);
+      background: rgba(244,237,221,.07);
+    }
+    .stat-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .stat-icon.longsor  { background: rgba(239,68,68,.15);  color: #f87171; }
+    .stat-icon.risiko   { background: rgba(234,179,8,.15);  color: #fbbf24; }
+    .stat-icon.safezone { background: rgba(34,197,94,.15);  color: #4ade80; }
+    .stat-icon.fasilitas{ background: rgba(59,130,246,.15); color: #60a5fa; }
+    .stat-icon.kabupaten{ background: rgba(168,85,247,.15); color: #c084fc; }
+
+    .stat-info {}
+    .stat-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px; font-weight: 400; color: var(--cream);
+      line-height: 1;
+    }
+    .stat-lbl {
+      font-size: 9.5px; font-weight: 500; color: rgba(244,237,221,.45);
+      letter-spacing: .07em; text-transform: uppercase; margin-top: 2px;
+    }
+
+    /* ════════════════════════════════════════
+       MAP + PANEL AREA
+    ════════════════════════════════════════ */
+    #tengah { flex: 1; display: flex; overflow: hidden; position: relative; }
+    #map { flex: 1; min-width: 0; }
+
+    /* ── RESIZE HANDLE ── */
+    #resizer {
+      width: 5px; background: var(--panel-border);
+      cursor: col-resize; flex-shrink: 0;
+      position: relative; z-index: 10;
+      transition: background .15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #resizer:hover, #resizer.dragging { background: var(--gold); }
+    #resizer::after {
+      content: '';
+      width: 1px; height: 32px;
+      background: rgba(244,237,221,.2);
+      border-radius: 2px;
+    }
+
+    /* ════════════════════════════════════════
+       PANEL KANAN
+    ════════════════════════════════════════ */
+    #panel {
+      width: 300px; min-width: 220px; max-width: 520px;
+      background: var(--olive-dark);
+      border-left: 1px solid var(--panel-border);
+      display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+    }
+
+    .panel-tabs {
+      display: flex; border-bottom: 1px solid var(--panel-border); flex-shrink: 0;
+    }
+    .ptab {
+      flex: 1; padding: 10px 4px; text-align: center;
+      font-size: 9px; font-weight: 600; letter-spacing: .07em;
+      text-transform: uppercase; cursor: pointer;
+      color: rgba(244,237,221,.35);
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+    }
+    .ptab:hover { color: rgba(244,237,221,.7); }
+    .ptab.active { color: var(--gold); border-color: var(--gold); }
+
+    .panel-body { flex: 1; overflow-y: auto; padding: 16px; }
+    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar-track { background: transparent; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+    .panel-section { display: none; }
+    .panel-section.active { display: block; }
+
+    /* ── Section label ── */
+    .p-label {
+      font-size: 9.5px; font-weight: 600; color: rgba(244,237,221,.35);
+      letter-spacing: .12em; text-transform: uppercase; margin-bottom: 10px;
+    }
+
+    /* ── CUACA ── */
+    .cuaca-main {
+      background: linear-gradient(135deg, var(--olive) 0%, var(--olive-dark) 100%);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px; padding: 18px; margin-bottom: 14px;
+    }
+    .cuaca-kota { font-size: 9.5px; color: var(--gold); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 6px; }
+    .cuaca-suhu {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 52px; font-weight: 300; color: var(--cream); line-height: 1;
+    }
+    .cuaca-desc { font-size: 11px; color: rgba(244,237,221,.55); margin-top: 4px; text-transform: capitalize; }
+    .cuaca-row { display: flex; gap: 8px; margin-top: 14px; }
+    .cuaca-item {
+      flex: 1; background: rgba(244,237,221,.06); border: 1px solid var(--panel-border);
+      border-radius: 6px; padding: 8px; text-align: center;
+    }
+    .cuaca-item .val { font-size: 13px; font-weight: 600; color: var(--cream); }
+    .cuaca-item .key { font-size: 8.5px; color: rgba(244,237,221,.4); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+
+    .peringatan-cuaca {
+      border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
+      font-size: 11px; line-height: 1.55; border-left: 2px solid;
+    }
+    .peringatan-cuaca.hujan-lebat { background: rgba(239,68,68,.1); border-color: #ef4444; color: #fca5a5; }
+    .peringatan-cuaca.hujan-sedang{ background: rgba(234,179,8,.1);  border-color: #eab308; color: #fde68a; }
+    .peringatan-cuaca.cerah        { background: rgba(34,197,94,.08); border-color: #22c55e; color: #86efac; }
+
+    .forecast-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .forecast-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      background: rgba(244,237,221,.04); border: 1px solid var(--panel-border);
+      border-radius: 6px; font-size: 11px;
+    }
+    .forecast-item .hari { width: 60px; font-weight: 500; color: var(--cream); }
+    .forecast-item .icon { font-size: 16px; }
+    .forecast-item .temp { margin-left: auto; font-weight: 600; color: var(--gold); }
+
+    /* ── STATUS BAHAYA ── */
+    .status-box {
+      border-radius: 8px; padding: 14px; margin-bottom: 12px;
+      border-left: 3px solid;
+    }
+    .status-box.aman    { background: rgba(34,197,94,.08); border-color: #22c55e; }
+    .status-box.waspada { background: rgba(234,179,8,.08); border-color: #eab308; }
+    .status-box.bahaya  { background: rgba(239,68,68,.08); border-color: #ef4444; }
+    .status-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+    .status-box.aman    h3 { color: #4ade80; }
+    .status-box.waspada h3 { color: #fbbf24; }
+    .status-box.bahaya  h3 { color: #f87171; }
+    .status-box p { font-size: 11px; line-height: 1.6; color: rgba(244,237,221,.65); }
+
+    .faktor-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .faktor-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px;
+      background: rgba(244,237,221,.04); border: 1px solid var(--panel-border);
+      border-radius: 6px; font-size: 11px;
+    }
+    .faktor-item .fi-icon { font-size: 14px; width: 20px; text-align: center; }
+    .faktor-item .fi-label { flex: 0 0 110px; color: rgba(244,237,221,.65); }
+    .faktor-bar { height: 4px; border-radius: 2px; background: rgba(244,237,221,.1); flex: 1; overflow: hidden; }
+    .faktor-bar-fill { height: 100%; border-radius: 2px; transition: width .5s; }
+    .faktor-bar-fill.low  { background: #22c55e; }
+    .faktor-bar-fill.med  { background: #eab308; }
+    .faktor-bar-fill.high { background: #ef4444; }
+
+    .bobot-total {
+      margin-top: 12px; padding: 12px 14px;
+      background: rgba(196,169,106,.1); border: 1px solid rgba(196,169,106,.25);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .bobot-total .label { font-size: 10px; color: rgba(244,237,221,.5); }
+    .bobot-total .sub   { font-size: 9px;  color: rgba(244,237,221,.3); margin-top: 2px; }
+    .bobot-total .nilai {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px; font-weight: 300; color: var(--gold);
+    }
+
+    /* Rute */
+    .rute-box {
+      background: rgba(234,179,8,.08); border: 1px solid rgba(234,179,8,.25);
+      border-radius: 8px; padding: 12px; margin-top: 10px;
+    }
+    .rute-box h4 { font-size: 11px; font-weight: 600; color: #fbbf24; margin-bottom: 5px; }
+    .rute-box p  { font-size: 11px; color: rgba(244,237,221,.6); line-height: 1.5; }
+    .rute-box.bahaya { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.25); }
+    .rute-box.bahaya h4 { color: #f87171; }
+    .btn-rute {
+      width: 100%; margin-top: 8px; padding: 8px;
+      background: rgba(196,169,106,.15); color: var(--gold);
+      border: 1px solid rgba(196,169,106,.3); border-radius: 6px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-rute:hover { background: rgba(196,169,106,.25); }
+
+    .sim-source-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 100px;
+      background: rgba(37,99,235,.15); color: #93c5fd;
+      border: 1px solid rgba(37,99,235,.25);
+      font-size: 9.5px; font-weight: 600; margin-bottom: 10px;
+    }
+
+    /* ── TITIK TERDEKAT ── */
+    .titik-list { display: flex; flex-direction: column; gap: 6px; }
+    .titik-card {
+      background: rgba(244,237,221,.04); border: 1px solid var(--panel-border);
+      border-left: 2px solid var(--gold);
+      border-radius: 6px; padding: 10px 12px;
+      cursor: pointer; transition: background .15s;
+    }
+    .titik-card:hover { background: rgba(244,237,221,.08); }
+    .titik-card h4 { font-size: 11px; font-weight: 600; color: var(--cream); margin-bottom: 2px; }
+    .titik-card p  { font-size: 10px; color: rgba(244,237,221,.45); }
+    .jarak-badge {
+      display: inline-block;
+      background: rgba(196,169,106,.15); color: var(--gold);
+      border: 1px solid rgba(196,169,106,.25);
+      font-size: 9.5px; padding: 1px 7px; border-radius: 100px; margin-top: 4px;
+    }
+
+    /* ── LAYER TOGGLE ── */
+    .layer-toggle { display: flex; flex-direction: column; gap: 6px; }
+    .layer-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: rgba(244,237,221,.04); border: 1px solid var(--panel-border);
+      border-radius: 6px; font-size: 11px; color: rgba(244,237,221,.7);
+      cursor: pointer; transition: background .15s;
+    }
+    .layer-item:hover { background: rgba(244,237,221,.08); }
+    .layer-item input { accent-color: var(--gold); width: 15px; height: 15px; cursor: pointer; }
+    .layer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .fas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+    .fas-btn {
+      padding: 10px 8px; border-radius: 6px;
+      border: 1px solid var(--panel-border);
+      background: rgba(244,237,221,.04);
+      font-size: 10px; font-weight: 500; text-align: center;
+      cursor: pointer; transition: all .15s;
+      color: rgba(244,237,221,.55);
+    }
+    .fas-btn:hover { background: rgba(244,237,221,.08); color: var(--cream); }
+    .fas-btn.active { background: rgba(196,169,106,.12); color: var(--gold); border-color: rgba(196,169,106,.3); }
+    .fas-btn .fs-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+
+    /* ── GPS BUTTON ── */
+    .btn-gps {
+      display: flex; align-items: center; gap: 8px; width: 100%;
+      padding: 10px 14px;
+      background: rgba(196,169,106,.12); color: var(--gold);
+      border: 1px solid rgba(196,169,106,.3); border-radius: 6px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      transition: background .15s; margin-bottom: 12px;
+    }
+    .btn-gps:hover { background: rgba(196,169,106,.22); }
+
+    .info-text { font-size: 11px; color: rgba(244,237,221,.35); line-height: 1.7; text-align: center; padding: 20px 0; }
+
+    /* ════════════════════════════════════════
+       MODAL DARURAT
+    ════════════════════════════════════════ */
+    #modal-darurat {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,.75); align-items: center; justify-content: center;
+    }
+    #modal-darurat.open { display: flex; }
+    .modal-box {
+      background: var(--olive-dark); border: 1px solid var(--panel-border);
+      border-radius: 12px; padding: 28px; width: 340px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .modal-box h2 {
+      font-family: 'Cormorant Garamond', serif;
+      color: #f87171; font-size: 20px; font-weight: 400; margin-bottom: 4px;
+    }
+    .modal-box > p { font-size: 11px; color: rgba(244,237,221,.45); margin-bottom: 18px; line-height: 1.5; }
+    .darurat-list { display: flex; flex-direction: column; gap: 8px; }
+    .darurat-item {
+      display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+      background: rgba(244,237,221,.04); border: 1px solid var(--panel-border);
+      border-radius: 8px; text-decoration: none; color: var(--cream);
+      font-size: 12px; font-weight: 500; transition: all .15s;
+    }
+    .darurat-item:hover { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.3); }
+    .darurat-item .d-icon { font-size: 20px; }
+    .darurat-item .d-num  { font-size: 10px; color: rgba(244,237,221,.4); font-weight: 400; }
+    .modal-close {
+      width: 100%; margin-top: 14px; padding: 10px;
+      background: none; border: 1px solid var(--panel-border);
+      border-radius: 6px; cursor: pointer; font-size: 12px;
+      color: rgba(244,237,221,.45); transition: all .15s;
+    }
+    .modal-close:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── Leaflet overrides ── */
+    .leaflet-control-layers {
+      background: var(--olive-dark) !important;
+      border: 1px solid var(--panel-border) !important;
+      color: var(--cream) !important;
+      font-family: 'Inter', sans-serif !important;
+      font-size: 11px !important;
+      border-radius: 6px !important;
+    }
+    .leaflet-control-layers label { color: rgba(244,237,221,.75) !important; }
+    .leaflet-popup-content-wrapper {
+      background: var(--olive-dark) !important;
+      color: var(--cream) !important;
+      border: 1px solid var(--panel-border) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4) !important;
+    }
+    .leaflet-popup-tip { background: var(--olive-dark) !important; }
+    .leaflet-popup-content { font-size: 12px !important; line-height: 1.6; }
+    .leaflet-bar a {
+      background: var(--olive-dark) !important;
+      color: var(--cream) !important;
+      border-color: var(--panel-border) !important;
+    }
+    .leaflet-bar a:hover { background: rgba(244,237,221,.08) !important; }
+  </style>
+</head>
+<body>
+<div id="root">
+
+  <!-- ── SIDEBAR ── -->
+  <div id="sidebar">
+    <a href="../index.html" class="sb-logo">W</a>
+    <nav class="sb-menu">
+      <a href="peta.html"    class="sb-item active">
+        <span class="sb-icon"><i class="bi bi-map-fill"></i></span><span>Peta</span>
+      </a>
+      <a href="saudara.html" class="sb-item">
+        <span class="sb-icon"><i class="bi bi-people-fill"></i></span><span>Saudara</span>
+      </a>
+      <a href="edukasi.html" class="sb-item">
+        <span class="sb-icon"><i class="bi bi-book-fill"></i></span><span>Edukasi</span>
+      </a>
+    </nav>
+    <div class="sb-bottom">
+      <button class="sb-darurat" onclick="toggleDarurat()" title="Darurat SOS">
+        <i class="bi bi-exclamation-octagon-fill" style="color:#f87171"></i>
+      </button>
+      <a href="../index.html" class="sb-home"><i class="bi bi-house-fill"></i></a>
+    </div>
+  </div>
+
+  <!-- ── APP ── -->
+  <div id="app">
+
+    <!-- TOPBAR -->
+    <div id="topbar">
+      <h1><span>WARLO</span> — Peta Mitigasi Longsor Lampung</h1>
+      <div id="status-chip" class="status-chip">
+        <span class="chip-dot"></span>
+        <span id="status-label">Memuat…</span>
+      </div>
+    </div>
+
+    <!-- STATS CARDS -->
+    <div id="statsbar">
+      <div class="stat-card">
+        <div class="stat-icon longsor"><i class="bi bi-record-circle-fill"></i></div>
+        <div class="stat-info">
+          <div class="stat-val" id="sc-longsor">—</div>
+          <div class="stat-lbl">Total Kejadian Longsor</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon risiko"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="stat-info">
+          <div class="stat-val" id="sc-risiko">—</div>
+          <div class="stat-lbl">Zona Risiko Longsor</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon safezone"><i class="bi bi-house-fill"></i></div>
+        <div class="stat-info">
+          <div class="stat-val" id="sc-safezone">—</div>
+          <div class="stat-lbl">Titik Safe Zone</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon fasilitas"><i class="bi bi-plus-circle-fill"></i></div>
+        <div class="stat-info">
+          <div class="stat-val" id="sc-fasilitas">—</div>
+          <div class="stat-lbl">Fasilitas Kesehatan</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon kabupaten"><i class="bi bi-geo-fill"></i></div>
+        <div class="stat-info">
+          <div class="stat-val" id="sc-kabupaten">15</div>
+          <div class="stat-lbl">Kab/Kota Terpantau</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP + RESIZER + PANEL -->
+    <div id="tengah">
+      <div id="map"></div>
+      <div id="resizer"></div>
+      <div id="panel">
+        <div class="panel-tabs">
+          <div class="ptab active" onclick="switchTab('cuaca',this)"><i class="bi bi-cloud-rain-fill"></i> Cuaca</div>
+          <div class="ptab" onclick="switchTab('status',this)"><i class="bi bi-exclamation-triangle-fill"></i> Status</div>
+          <div class="ptab" onclick="switchTab('terdekat',this)"><i class="bi bi-geo-alt-fill"></i> Terdekat</div>
+          <div class="ptab" onclick="switchTab('layer',this)"><i class="bi bi-layers-fill"></i> Layer</div>
+        </div>
+        <div class="panel-body">
+
+          <!-- TAB CUACA -->
+          <div id="tab-cuaca" class="panel-section active">
+            <button class="btn-gps" onclick="lacakLokasi()">
+              <i class="bi bi-geo-alt-fill"></i> Deteksi Lokasi Saya
+            </button>
+            <div id="cuaca-content">
+              <p class="info-text">Klik "Deteksi Lokasi" atau klik titik di peta untuk melihat cuaca & status bahaya.</p>
+            </div>
+          </div>
+
+          <!-- TAB STATUS BAHAYA -->
+          <div id="tab-status" class="panel-section">
+            <div id="status-content">
+              <p class="info-text">Deteksi lokasi terlebih dahulu untuk melihat status bahaya longsor di wilayahmu.</p>
+            </div>
+          </div>
+
+          <!-- TAB TITIK TERDEKAT -->
+          <div id="tab-terdekat" class="panel-section">
+            <div class="p-label" style="margin-bottom:12px;">Fasilitas &amp; Titik Evakuasi Terdekat</div>
+            <div id="titik-list" class="titik-list">
+              <p class="info-text">Deteksi lokasi atau klik peta untuk melihat fasilitas & titik evakuasi terdekat (radius 10 km).</p>
+            </div>
+          </div>
+
+          <!-- TAB LAYER -->
+          <div id="tab-layer" class="panel-section">
+            <div class="p-label" style="margin-bottom:10px;">Tampilkan Layer Peta</div>
+            <div class="layer-toggle">
+              <label class="layer-item">
+                <input type="checkbox" id="chk-histori" checked onchange="toggleLayer('histori',this)">
+                <span class="layer-dot" style="background:#ea580c;"></span>
+                <span><i class="bi bi-record-circle-fill" style="color:#f97316"></i> Histori Longsor</span>
+              </label>
+              <label class="layer-item">
+                <input type="checkbox" id="chk-rawan" checked onchange="toggleLayer('rawan',this)">
+                <span class="layer-dot" style="background:#ef4444;"></span>
+                <span><i class="bi bi-record-circle-fill" style="color:#ef4444"></i> Rawan Longsor (DB)</span>
+              </label>
+              <label class="layer-item">
+                <input type="checkbox" id="chk-balai" checked onchange="toggleLayer('balai',this)">
+                <span class="layer-dot" style="background:#eab308;"></span>
+                <span><i class="bi bi-record-circle-fill" style="color:#eab308"></i> Balai Evakuasi (DB)</span>
+              </label>
+              <label class="layer-item">
+                <input type="checkbox" id="chk-batas" checked onchange="toggleLayer('batas',this)">
+                <span class="layer-dot" style="background:transparent;border:2px solid #3b82f6;width:8px;height:8px;border-radius:2px;"></span>
+                <span>Batas Wilayah Lampung</span>
+              </label>
+            </div>
+
+            <div class="p-label" style="margin:16px 0 8px;">Fasilitas Darurat</div>
+            <div class="fas-grid">
+              <button class="fas-btn active" id="btn-apotek"  onclick="toggleFas('apotek',this)">
+                <span class="fs-icon"><i class="bi bi-capsule"></i></span>Apotek
+              </button>
+              <button class="fas-btn active" id="btn-rs"      onclick="toggleFas('rs',this)">
+                <span class="fs-icon"><i class="bi bi-bandaid-fill"></i></span>Rumah Sakit
+              </button>
+              <button class="fas-btn active" id="btn-dokter"  onclick="toggleFas('dokter',this)">
+                <span class="fs-icon"><i class="bi bi-heart-pulse-fill"></i></span>Dokter
+              </button>
+              <button class="fas-btn active" id="btn-pasar"   onclick="toggleFas('pasar',this)">
+                <span class="fs-icon"><i class="bi bi-shop"></i></span>Pasar
+              </button>
+            </div>
+            <p style="font-size:9.5px;color:rgba(244,237,221,.3);margin-top:10px;line-height:1.5;">
+              Fasilitas muncul otomatis saat status Waspada / Bahaya aktif.
+            </p>
+          </div>
+
+        </div>
+      </div><!-- #panel -->
+    </div><!-- #tengah -->
+  </div><!-- #app -->
+</div><!-- #root -->
+
+<!-- MODAL DARURAT -->
+<div id="modal-darurat">
+  <div class="modal-box">
+    <h2><i class="bi bi-exclamation-octagon-fill" style="color:#ef4444"></i> Hubungi Bantuan Darurat</h2>
+    <p>Pilih instansi yang ingin dihubungi. Pastikan kamu di lokasi aman sebelum menelepon.</p>
+    <div class="darurat-list">
+      <a href="tel:117"         class="darurat-item"><span class="d-icon"><i class="bi bi-bank2"></i></span><div><div>BNPB Nasional</div><div class="d-num">117</div></div></a>
+      <a href="tel:07217773578" class="darurat-item"><span class="d-icon"><i class="bi bi-house-fill"></i></span><div><div>BPBD Lampung</div><div class="d-num">0721-773578</div></div></a>
+      <a href="tel:119"         class="darurat-item"><span class="d-icon"><i class="bi bi-truck-front-fill"></i></span><div><div>Ambulans / PMI</div><div class="d-num">119</div></div></a>
+      <a href="tel:113"         class="darurat-item"><span class="d-icon"><i class="bi bi-truck-front-fill"></i></span><div><div>Pemadam Kebakaran</div><div class="d-num">113</div></div></a>
+      <a href="tel:115"         class="darurat-item"><span class="d-icon"><i class="bi bi-shield-fill-check"></i></span><div><div>Basarnas SAR</div><div class="d-num">115</div></div></a>
+    </div>
+    <button class="modal-close" onclick="toggleDarurat()">Tutup</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const OWM_KEY = 'a426bae7236755fffc453e7e570b3835';
+const API_BASE = 'http://localhost:3000';
+
+// ── PETA ──
+var temaCerah = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:20,attribution:'Google Maps'});
+var temaGelap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:20,attribution:'CartoDB'});
+var tema3D    = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,attribution:'Google Satelit'});
+
+var map = L.map('map',{center:[-5.10,105.10],zoom:9,layers:[temaGelap]});
+L.control.layers({
+  '<i class="bi bi-sun-fill" style="color:#f59e0b"></i> Cerah'   : temaCerah,
+  '<i class="bi bi-moon-stars-fill"></i> Gelap'                  : temaGelap,
+  '<i class="bi bi-globe-asia-australia"></i> 3D Satelit'        : tema3D
+}, null, {collapsed:false}).addTo(map);
+
+// ── STATE ──
+var userMarker  = null;
+var userLatlng  = null;
+var ruteLayer   = null;
+var daftarBalai      = [];
+var daftarZonaBahaya = [];
+
+var fasLayers  = { apotek:null, rs:null, dokter:null, pasar:null };
+var fasAktif   = { apotek:true, rs:true, dokter:true, pasar:true };
+var fasVisible = false;
+var fasData    = { apotek:[], rs:[], dokter:[], pasar:[] };
+
+var layers = { histori:null, rawan:null, balai:null, batas:null };
+
+// ── STATS COUNTERS ──
+var statsCount = { longsor:0, risiko:0, safezone:0, fasilitas:0 };
+
+function updateStatCard(id, val) {
+  var el = document.getElementById('sc-'+id);
+  if (el) el.textContent = val;
+}
+
+// ── HELPER LOAD GEOJSON ──
+function loadGeoJson(url, onDone) {
+  fetch(url)
+    .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(onDone)
+    .catch(e => console.warn('Gagal:', url, e));
+}
+
+// ─────────────────────────────────────────
+// 1. LOAD DATA STATIS
+// ─────────────────────────────────────────
+loadGeoJson('../assets/data/lampung.geojson', data => {
+  layers.batas = L.geoJson(data, {
+    style: { color:'#3b82f6', weight:2, fillOpacity:0.01, dashArray:'4,4' }
+  }).addTo(map);
+});
+
+loadGeoJson('../assets/data/histori_longsor.geojson', data => {
+  var count = (data.features||[]).length;
+  statsCount.longsor = count;
+  updateStatCard('longsor', count);
+
+  layers.histori = L.geoJson(data, {
+    pointToLayer: (f,ll) => L.circleMarker(ll, {
+      radius:8, fillColor:'#ea580c', color:'#fff', weight:2, fillOpacity:0.95
+    }),
+    onEachFeature: (f,layer) => {
+      var p = f.properties;
+      layer.bindPopup(`<b><i class="bi bi-record-circle-fill" style="color:#f97316"></i> Histori Longsor</b><br><b>Lokasi:</b> ${p.nama_lokasi||'—'}<br><b>Tanggal:</b> ${p.tanggal_kejadian||'—'}`);
+    }
+  }).addTo(map);
+});
+
+// Fasilitas
+var fasConfig = {
+  apotek : {url:'../assets/data/apotek.geojson',      color:'#0ea5e9', label:'<i class="bi bi-capsule"></i> Apotek'},
+  rs     : {url:'../assets/data/rumah_sakit.geojson', color:'#ef4444', label:'<i class="bi bi-bandaid-fill"></i> Rumah Sakit'},
+  dokter : {url:'../assets/data/dokter.geojson',      color:'#8b5cf6', label:'<i class="bi bi-heart-pulse-fill"></i> Dokter'},
+  pasar  : {url:'../assets/data/pasar.geojson',       color:'#10b981', label:'<i class="bi bi-shop"></i> Pasar'},
+};
+
+function loadFasilitas() {
+  Object.keys(fasConfig).forEach(key => {
+    if (fasLayers[key]) return;
+    var cfg = fasConfig[key];
+    loadGeoJson(cfg.url, data => {
+      fasData[key] = data.features || [];
+      // Update stats fasilitas (rs)
+      if (key === 'rs' || key === 'dokter') {
+        statsCount.fasilitas += fasData[key].length;
+        updateStatCard('fasilitas', statsCount.fasilitas);
+      }
+      fasLayers[key] = L.geoJson(data, {
+        pointToLayer: (f,ll) => L.circleMarker(ll, {
+          radius:7, fillColor:cfg.color, color:'#fff', weight:2, fillOpacity:0.9
+        }),
+        onEachFeature: (f,layer) => {
+          layer.bindPopup(`<b>${cfg.label}</b><br>${f.properties.nama||f.properties.name||'—'}`);
+        }
+      });
+      if (fasAktif[key]) fasLayers[key].addTo(map);
+      if (userLatlng) tampilkanTitikTerdekat(userLatlng);
+    });
+  });
+  fasVisible = true;
+}
+
+document.addEventListener('DOMContentLoaded', () => { loadFasilitas(); });
+
+// ─────────────────────────────────────────
+// 2. LOAD DATA DINAMIS dari DB
+// ─────────────────────────────────────────
+var layerRawanGroup = L.layerGroup();
+var layerBalaiGroup = L.layerGroup();
+layers.rawan = layerRawanGroup;
+layers.balai = layerBalaiGroup;
+
+fetch(`${API_BASE}/api/simulasi`)
+  .then(res => res.json())
+  .then(data => {
+    if (data.rawan && data.rawan.length > 0) {
+      statsCount.risiko = data.rawan.length;
+      updateStatCard('risiko', data.rawan.length);
+      data.rawan.forEach(f => {
+        var coords = f.geometry.coordinates;
+        var ll = L.latLng(coords[1], coords[0]);
+        var nama = f.properties.nama || 'Kawasan Rawan';
+        daftarZonaBahaya.push({latlng:ll, nama:nama});
+        L.circle(ll,{radius:800, color:'#ef4444', fillColor:'#ef4444', fillOpacity:.15, weight:1.5}).addTo(layerRawanGroup);
+        L.circle(ll,{radius:1500, color:'#eab308', fillColor:'#eab308', fillOpacity:.05, weight:1, dashArray:'6,6'}).addTo(layerRawanGroup);
+        L.circleMarker(ll,{radius:9, fillColor:'#ef4444', color:'#fff', weight:2, fillOpacity:.95})
+          .bindPopup(`<b><i class="bi bi-record-circle-fill" style="color:#ef4444"></i> RAWAN LONGSOR (DB)</b><br>${nama}<br><small>Data sistem simulasi admin</small>`)
+          .addTo(layerRawanGroup);
+      });
+    }
+    if (data.balai && data.balai.length > 0) {
+      statsCount.safezone = data.balai.length;
+      updateStatCard('safezone', data.balai.length);
+      data.balai.forEach(f => {
+        var coords = f.geometry.coordinates;
+        var ll = L.latLng(coords[1], coords[0]);
+        var nama = f.properties.nama || 'Balai Evakuasi';
+        daftarBalai.push({latlng:ll, nama:nama});
+        L.circleMarker(ll,{radius:9, fillColor:'#eab308', color:'#333', weight:2, fillOpacity:.95})
+          .bindPopup(`<b><i class="bi bi-record-circle-fill" style="color:#eab308"></i> BALAI EVAKUASI</b><br>${nama}<br><small>Titik pengungsian resmi</small>`)
+          .addTo(layerBalaiGroup);
+      });
+    }
+    layerRawanGroup.addTo(map);
+    layerBalaiGroup.addTo(map);
+    if (userLatlng) tampilkanTitikTerdekat(userLatlng);
+  })
+  .catch(() => {
+    // Fallback geojson statis
+    loadGeoJson('../assets/data/rawan_longsor.geojson', data => {
+      var count = (data.features||[]).length;
+      statsCount.risiko = count;
+      updateStatCard('risiko', count);
+      L.geoJson(data, {
+        pointToLayer:(f,ll) => {
+          daftarZonaBahaya.push({latlng:ll, nama:f.properties.nama_lokasi||'Kawasan Rawan'});
+          L.circle(ll,{radius:800,color:'#ef4444',fillColor:'#ef4444',fillOpacity:.15,weight:1.5}).addTo(layerRawanGroup);
+          return L.circleMarker(ll,{radius:9,fillColor:'#ef4444',color:'#fff',weight:2,fillOpacity:.95});
+        },
+        onEachFeature:(f,layer) => layer.bindPopup(`<b><i class="bi bi-record-circle-fill" style="color:#ef4444"></i> Rawan Longsor</b><br>${f.properties.nama_lokasi||'—'}`)
+      }).addTo(layerRawanGroup);
+      layerRawanGroup.addTo(map);
+    });
+    loadGeoJson('../assets/data/balai.geojson', data => {
+      var count = (data.features||[]).length;
+      statsCount.safezone = count;
+      updateStatCard('safezone', count);
+      L.geoJson(data, {
+        pointToLayer:(f,ll) => {
+          daftarBalai.push({latlng:ll, nama:f.properties.nama||'Balai Evakuasi'});
+          return L.circleMarker(ll,{radius:9,fillColor:'#eab308',color:'#333',weight:2,fillOpacity:.95});
+        },
+        onEachFeature:(f,layer) => layer.bindPopup(`<b><i class="bi bi-record-circle-fill" style="color:#eab308"></i> Balai Evakuasi</b><br>${f.properties.nama||'—'}`)
+      }).addTo(layerBalaiGroup);
+      layerBalaiGroup.addTo(map);
+      if (userLatlng) tampilkanTitikTerdekat(userLatlng);
+    });
+  });
+
+// ─────────────────────────────────────────
+// 3. TOGGLE LAYER & FASILITAS
+// ─────────────────────────────────────────
+function toggleLayer(key, chk) {
+  if (!layers[key]) return;
+  if (chk.checked) layers[key].addTo(map);
+  else map.removeLayer(layers[key]);
+  if (key === 'balai' && userLatlng) tampilkanTitikTerdekat(userLatlng);
+}
+
+function sembunyikanFasilitas() {
+  Object.keys(fasLayers).forEach(k => {
+    if (fasLayers[k]) map.removeLayer(fasLayers[k]);
+  });
+  fasVisible = false;
+}
+
+// ─────────────────────────────────────────
+// 3b. TITIK TERDEKAT
+// ─────────────────────────────────────────
+function tampilkanTitikTerdekat(latlng) {
+  var semua = [];
+  Object.keys(fasConfig).forEach(key => {
+    if (!fasAktif[key]) return;
+    (fasData[key]||[]).forEach(f => {
+      var c = f.geometry.coordinates;
+      var ll = L.latLng(c[1],c[0]);
+      var jarak = latlng.distanceTo(ll);
+      if (jarak < 10000) semua.push({jarak, nama:f.properties.nama||f.properties.name||'—', latlng:ll, label:fasConfig[key].label});
+    });
+  });
+  var chkBalai = document.getElementById('chk-balai');
+  if (!chkBalai || chkBalai.checked) {
+    daftarBalai.forEach(b => {
+      var jarak = latlng.distanceTo(b.latlng);
+      if (jarak < 10000) semua.push({jarak, nama:b.nama, latlng:b.latlng, label:'<i class="bi bi-record-circle-fill" style="color:#eab308"></i> Balai Evakuasi'});
+    });
+  }
+  semua.sort((a,b)=>a.jarak-b.jarak);
+  var top = semua.slice(0,10);
+  if (!top.length) {
+    document.getElementById('titik-list').innerHTML = '<p class="info-text">Tidak ada fasilitas dalam radius 10 km dari lokasi ini.</p>';
+    return;
+  }
+  document.getElementById('titik-list').innerHTML = top.map(t=>`
+    <div class="titik-card" onclick="map.setView([${t.latlng.lat},${t.latlng.lng}],16)">
+      <h4>${t.label} — ${t.nama}</h4>
+      <span class="jarak-badge">${t.jarak<1000?Math.round(t.jarak)+' m':(t.jarak/1000).toFixed(1)+' km'}</span>
+    </div>
+  `).join('');
+}
+
+function toggleFas(key, btn) {
+  fasAktif[key] = !fasAktif[key];
+  btn.classList.toggle('active', fasAktif[key]);
+  if (fasLayers[key]) {
+    if (fasAktif[key]) fasLayers[key].addTo(map);
+    else map.removeLayer(fasLayers[key]);
+  }
+  if (userLatlng) tampilkanTitikTerdekat(userLatlng);
+}
+
+// ─────────────────────────────────────────
+// 4. CUACA
+// ─────────────────────────────────────────
+async function ambilCuaca(lat, lon) {
+  try {
+    const [cur, fore] = await Promise.all([
+      fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OWM_KEY}&units=metric&lang=id`).then(r=>r.json()),
+      fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${OWM_KEY}&units=metric&lang=id&cnt=24`).then(r=>r.json())
+    ]);
+    var suhu=Math.round(cur.main.temp), desc=cur.weather[0].description;
+    var humid=cur.main.humidity, angin=Math.round(cur.wind.speed*3.6);
+    var kota=cur.name||'Lokasi Anda';
+    var curahHujan=cur.rain?(cur.rain['1h']||cur.rain['3h']||0):0;
+
+    var peringatan='', warningLevel='cerah';
+    if (curahHujan>=10||humid>=90) {
+      warningLevel='hujan-lebat';
+      peringatan=`<i class="bi bi-cloud-lightning-rain-fill"></i> <b>PERINGATAN:</b> Curah hujan tinggi (${curahHujan} mm/jam). Risiko longsor meningkat!`;
+    } else if (curahHujan>=5||humid>=75) {
+      warningLevel='hujan-sedang';
+      peringatan=`<i class="bi bi-cloud-rain-fill"></i> Hujan sedang terdeteksi. Pantau terus perkembangan cuaca.`;
+    } else {
+      peringatan=`<i class="bi bi-sun-fill" style="color:#fbbf24"></i> Kondisi cuaca relatif aman. Tetap waspada di daerah lereng.`;
+    }
+
+    var hariMap=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+    var forecastHtml='', seen=new Set();
+    fore.list.forEach(item=>{
+      var d=new Date(item.dt*1000);
+      var key=`${d.getDate()}-${d.getMonth()}`;
+      if(!seen.has(key)&&seen.size<4){
+        seen.add(key);
+        var ico=item.weather[0].main.includes('Rain')?'<i class="bi bi-cloud-rain-fill" style="color:#60a5fa"></i>':
+                item.weather[0].main.includes('Cloud')?'<i class="bi bi-cloud-fill"></i>':'<i class="bi bi-sun-fill" style="color:#fbbf24"></i>';
+        forecastHtml+=`<div class="forecast-item"><span class="hari">${hariMap[d.getDay()]}</span><span class="icon">${ico}</span><span style="flex:1;font-size:10px;color:rgba(244,237,221,.5)">${item.weather[0].description}</span><span class="temp">${Math.round(item.main.temp)}°</span></div>`;
+      }
+    });
+
+    document.getElementById('cuaca-content').innerHTML=`
+      <div class="cuaca-main">
+        <div class="cuaca-kota">${kota}</div>
+        <div class="cuaca-suhu">${suhu}°<sup style="font-size:18px;font-family:Inter">C</sup></div>
+        <div class="cuaca-desc">${desc}</div>
+        <div class="cuaca-row">
+          <div class="cuaca-item"><div class="val">${humid}%</div><div class="key">Kelembaban</div></div>
+          <div class="cuaca-item"><div class="val">${angin} km/h</div><div class="key">Angin</div></div>
+          <div class="cuaca-item"><div class="val">${curahHujan} mm</div><div class="key">Hujan</div></div>
+        </div>
+      </div>
+      <div class="peringatan-cuaca ${warningLevel}">${peringatan}</div>
+      <div class="p-label" style="margin-bottom:8px;">Prakiraan 4 Hari</div>
+      <div class="forecast-list">${forecastHtml}</div>
+    `;
+    hitungStatusBahaya(lat, lon, curahHujan, humid);
+  } catch(e) {
+    document.getElementById('cuaca-content').innerHTML=`<p class="info-text"><i class="bi bi-exclamation-triangle-fill" style="color:#fbbf24"></i> Gagal memuat data cuaca. Periksa koneksi internet.</p>`;
+    hitungStatusBahaya(lat, lon, 0, 70);
+  }
+}
+
+// ─────────────────────────────────────────
+// 5. HITUNG STATUS BAHAYA — 6 FAKTOR
+// ─────────────────────────────────────────
+function hitungStatusBahaya(lat, lon, curahHujan, humid) {
+  var latlng=L.latLng(lat,lon), jarakMin=Infinity, namaZona='';
+  var namaBalai='', latlngBalaiTerdekat=null, jarakMinBalai=Infinity;
+
+  daftarZonaBahaya.forEach(z=>{var d=latlng.distanceTo(z.latlng);if(d<jarakMin){jarakMin=d;namaZona=z.nama;}});
+  daftarBalai.forEach(b=>{var d=latlng.distanceTo(b.latlng);if(d<jarakMinBalai){jarakMinBalai=d;namaBalai=b.nama;latlngBalaiTerdekat=b.latlng;}});
+
+  var f1=Math.min((curahHujan/50)*25,25);
+  var f2=Math.max(0,Math.min(((humid-60)/40)*15,15));
+  var f3=jarakMin<300?25:jarakMin<700?18:jarakMin<1500?10:jarakMin<3000?5:0;
+  var f4=lon<104.5?15:lon<104.9?10:lon<105.3?5:2;
+  var f5=lon<104.6?8:lon<105.0?5:3;
+  var f6=jarakMin<5000?Math.round((1-jarakMin/5000)*10):0;
+  var total=Math.max(0,Math.round(f1+f2+f3+f4+f5+f6));
+  var level=total>=60?'bahaya':total>=30?'waspada':'aman';
+
+  var chip=document.getElementById('status-chip'), lbl=document.getElementById('status-label');
+  chip.className='status-chip '+(level==='aman'?'':level);
+  lbl.textContent=level==='bahaya'?'⬤ BAHAYA':level==='waspada'?'⬤ WASPADA':'⬤ AMAN';
+
+  var rekomen=level==='bahaya'
+    ?'Segera berkemas dan evakuasi ke titik aman! Hindari area lereng dan tepi sungai.'
+    :level==='waspada'
+    ?'Tetap waspada. Siapkan tas darurat dan pantau informasi dari BPBD.'
+    :'Kondisi relatif aman. Tetap pantau perkembangan cuaca.';
+
+  function barClass(v,m){return v/m>0.6?'high':v/m>0.3?'med':'low';}
+  function pct(v,m){return Math.min((v/m)*100,100);}
+
+  var ruteHtml='';
+  if ((level==='bahaya'||level==='waspada')&&latlngBalaiTerdekat) {
+    gambarRute(latlng, latlngBalaiTerdekat, level);
+    var jarakKm=(jarakMinBalai/1000).toFixed(1);
+    ruteHtml=`<div class="rute-box ${level}">
+      <h4><i class="bi bi-map-fill"></i> Rute Evakuasi Terdekat</h4>
+      <p><b>${namaBalai}</b><br>Jarak: ±${jarakKm} km dari lokasi Anda<br>Rute ditampilkan di peta.</p>
+      <button class="btn-rute" onclick="map.panTo([${latlngBalaiTerdekat.lat},${latlngBalaiTerdekat.lng}])"><i class="bi bi-geo-alt-fill"></i> Lihat di Peta</button>
+    </div>`;
+  } else if (level==='aman'&&ruteLayer) {
+    map.removeLayer(ruteLayer); ruteLayer=null;
+  }
+
+  document.getElementById('status-content').innerHTML=`
+    <div class="sim-source-badge"><i class="bi bi-broadcast-pin"></i> Data Simulasi Admin (DB)</div>
+    <div class="status-box ${level}">
+      <h3>${level==='bahaya'?'⬤ BAHAYA LONGSOR':level==='waspada'?'⬤ WASPADA LONGSOR':'⬤ AMAN'}</h3>
+      <p>${rekomen}</p>
+    </div>
+    <div class="p-label" style="margin-bottom:8px;">Analisis 6 Faktor Risiko</div>
+    <div class="faktor-list">
+      <div class="faktor-item"><span class="fi-icon"><i class="bi bi-cloud-rain-fill"></i></span><span class="fi-label">Curah Hujan</span><div class="faktor-bar"><div class="faktor-bar-fill ${barClass(f1,25)}" style="width:${pct(f1,25)}%"></div></div></div>
+      <div class="faktor-item"><span class="fi-icon"><i class="bi bi-droplet-fill"></i></span><span class="fi-label">Kelembaban Tanah</span><div class="faktor-bar"><div class="faktor-bar-fill ${barClass(f2,15)}" style="width:${pct(f2,15)}%"></div></div></div>
+      <div class="faktor-item"><span class="fi-icon"><i class="bi bi-geo-alt-fill"></i></span><span class="fi-label">Jarak Zona Rawan</span><div class="faktor-bar"><div class="faktor-bar-fill ${barClass(f3,25)}" style="width:${pct(f3,25)}%"></div></div></div>
+      <div class="faktor-item"><span class="fi-icon"><i class="bi bi-triangle-fill"></i></span><span class="fi-label">Kemiringan Lereng</span><div class="faktor-bar"><div class="faktor-bar-fill ${barClass(f4,15)}" style="width:${pct(f4,15)}%"></div></div></div>
+      <div class="faktor-item"><span class="fi-icon"><i class="bi bi-tree-fill"></i></span><span class="fi-label">Tutupan Lahan</span><div class="faktor-bar"><div class="faktor-bar-fill ${barClass(f5,8)}" style="width:${pct(f5,8)}%"></div></div></div>
+      <div class="faktor-item"><span class="fi-icon"><i class="bi bi-file-text-fill"></i></span><span class="fi-label">Histori Kejadian</span><div class="faktor-bar"><div class="faktor-bar-fill ${barClass(f6,10)}" style="width:${pct(f6,10)}%"></div></div></div>
+    </div>
+    <div class="bobot-total">
+      <div>
+        <div class="label">Indeks Risiko (6 Faktor)</div>
+        <div class="sub">${namaZona?'Dekat: '+namaZona:'Tidak di zona rawan DB'}</div>
+      </div>
+      <div class="nilai">${total}<span style="font-size:13px;opacity:.5">/100</span></div>
+    </div>
+    ${ruteHtml}
+  `;
+
+  if (level!=='aman') {
+    loadFasilitas();
+    switchTab('status', document.querySelectorAll('.ptab')[1]);
+  } else {
+    sembunyikanFasilitas();
+  }
+}
+
+// ─────────────────────────────────────────
+// 6. GAMBAR RUTE EVAKUASI
+// ─────────────────────────────────────────
+function gambarRute(dari, ke, level) {
+  if (ruteLayer) map.removeLayer(ruteLayer);
+  var warna=level==='bahaya'?'#ef4444':'#eab308';
+  ruteLayer=L.layerGroup();
+  L.polyline([dari,ke],{color:warna,weight:4,dashArray:'10,8',opacity:0.85}).addTo(ruteLayer);
+  L.circleMarker(ke,{radius:14,fillColor:'#eab308',color:'#fff',weight:3,fillOpacity:1})
+    .bindPopup(`<b><i class="bi bi-record-circle-fill" style="color:#eab308"></i> TITIK EVAKUASI</b><br>Menuju: ${daftarBalai.find(b=>b.latlng.equals(ke))?.nama||'Balai Evakuasi'}`)
+    .addTo(ruteLayer);
+  L.circleMarker(ke,{radius:22,fillColor:'transparent',color:warna,weight:2,opacity:0.5,dashArray:'5,5'}).addTo(ruteLayer);
+  ruteLayer.addTo(map);
+}
+
+// ─────────────────────────────────────────
+// 7. GPS & KLIK PETA
+// ─────────────────────────────────────────
+function lacakLokasi() { map.locate({setView:true,maxZoom:14}); }
+map.on('locationfound', e=>updatePosisi(e.latlng));
+map.on('locationerror', ()=>alert('Aktifkan GPS atau klik titik di peta untuk simulasi.'));
+map.on('click', e=>updatePosisi(e.latlng));
+
+function updatePosisi(latlng) {
+  if(userMarker) map.removeLayer(userMarker);
+  userMarker=L.marker(latlng,{
+    icon:L.divIcon({
+      html:`<div style="width:14px;height:14px;background:#C4A96A;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(196,169,106,.3)"></div>`,
+      iconSize:[14,14],iconAnchor:[7,7]
+    })
+  }).addTo(map).bindPopup('<b><i class="bi bi-geo-alt-fill"></i> Lokasi Kamu</b>').openPopup();
+  userLatlng=latlng;
+  ambilCuaca(latlng.lat,latlng.lng);
+  tampilkanTitikTerdekat(latlng);
+}
+
+// ─────────────────────────────────────────
+// 8. TAB & MODAL
+// ─────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.panel-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+function toggleDarurat() {
+  document.getElementById('modal-darurat').classList.toggle('open');
+}
+
+// ─────────────────────────────────────────
+// 9. RESIZE PANEL (Draggable)
+// ─────────────────────────────────────────
+(function initResizer() {
+  var resizer = document.getElementById('resizer');
+  var panel   = document.getElementById('panel');
+  var tengah  = document.getElementById('tengah');
+  var isDragging = false;
+  var startX, startW;
+
+  resizer.addEventListener('mousedown', e => {
+    isDragging = true;
+    startX = e.clientX;
+    startW = panel.offsetWidth;
+    resizer.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    var delta = startX - e.clientX; // panel di kanan, drag kiri = perbesar
+    var newW  = Math.max(220, Math.min(520, startW + delta));
+    panel.style.width = newW + 'px';
+    map.invalidateSize();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    resizer.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    map.invalidateSize();
+  });
+})();
+</script>
+</body>
+</html>
