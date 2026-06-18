@@ -411,7 +411,7 @@
 </div>
 
 <script>
-const API_BASE = 'http://localhost:3000';
+const API_BASE = '';
 function updateClock(){var now=new Date();document.getElementById('clock').textContent=now.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+' · '+now.toLocaleTimeString('id-ID');}
 updateClock();setInterval(updateClock,1000);
 function tambahLog(icon,dotClass,teks,waktu){var tl=document.getElementById('timeline');if(tl.querySelector('.tl-item .tl-dot.biru'))tl.innerHTML='';tl.insertAdjacentHTML('afterbegin',`<div class="tl-item"><div class="tl-dot ${dotClass}">${icon}</div><div class="tl-content"><p>${teks}</p><div class="tl-time">${waktu||new Date().toLocaleTimeString('id-ID')}</div></div></div>`);}

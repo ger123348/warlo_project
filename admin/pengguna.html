@@ -239,7 +239,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const API_BASE='http://localhost:3000';
+const API_BASE='';
 var map=L.map('map',{center:[-5.10,105.10],zoom:9});
 L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:20}).addTo(map);
 fetch('../assets/data/lampung.geojson').then(r=>r.json()).then(d=>{L.geoJson(d,{style:{color:'#2563eb',weight:2,fillOpacity:0.01}}).addTo(map);}).catch(()=>{});

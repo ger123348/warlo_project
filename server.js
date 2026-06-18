@@ -3,18 +3,24 @@ const cors = require('cors');
 const { Pool } = require('pg');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname));
 
-const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'warlo_db',
-    password: 'janganlupa',
-    port: 5432,
-});
+const pool = new Pool(
+    process.env.DATABASE_URL ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    } : {
+        user: 'postgres',
+        host: 'localhost',
+        database: 'warlo_db',
+        password: 'janganlupa',
+        port: 5432,
+    }
+);
 
 app.get('/api/simulasi', async (req, res) => {
     try {
