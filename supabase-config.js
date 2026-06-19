@@ -7,7 +7,7 @@
 // ─── KREDENSIAL SUPABASE ───
 // Ganti nilai di bawah dengan kredensial dari Supabase Dashboard > Settings > API
 const SUPABASE_URL  = 'https://mwxdbrchbphrwveqxcev.supabase.co';
-const SUPABASE_ANON = 'GANTI_DENGAN_ANON_KEY_ANDA';
+const SUPABASE_ANON = 'sb_publishable__uaqwsVXPBUCOzBttGnU8g_t09dHxYp';
 
 // ─── INISIALISASI CLIENT ───
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
