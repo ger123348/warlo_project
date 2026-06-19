@@ -5,12 +5,21 @@
    ============================================================ */
 
 // ─── KREDENSIAL SUPABASE ───
-// Ganti nilai di bawah dengan kredensial dari Supabase Dashboard > Settings > API
 const SUPABASE_URL  = 'https://mwxdbrchbphrwveqxcev.supabase.co';
 const SUPABASE_ANON = 'sb_publishable__uaqwsVXPBUCOzBttGnU8g_t09dHxYp';
 
-// ─── INISIALISASI CLIENT ───
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+// ─── INISIALISASI CLIENT (dengan fallback jika gagal) ───
+var supabase = null;
+try {
+    if (window.supabase && window.supabase.createClient) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+        console.log('✅ Supabase client berhasil diinisialisasi');
+    } else {
+        console.error('❌ Supabase SDK belum dimuat. Pastikan CDN script di-load terlebih dahulu.');
+    }
+} catch (e) {
+    console.error('❌ Gagal inisialisasi Supabase:', e.message);
+}
 
 // ─── HELPER FUNCTIONS ───
 
@@ -19,8 +28,14 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
  * @returns {Promise<object|null>} session object atau null
  */
 async function getSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session;
+    if (!supabase) return null;
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        return session;
+    } catch (e) {
+        console.warn('getSession error:', e.message);
+        return null;
+    }
 }
 
 /**
@@ -28,8 +43,14 @@ async function getSession() {
  * @returns {Promise<object|null>} user object atau null
  */
 async function getUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+    if (!supabase) return null;
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        return user;
+    } catch (e) {
+        console.warn('getUser error:', e.message);
+        return null;
+    }
 }
 
 /**
@@ -38,25 +59,46 @@ async function getUser() {
  * @returns {Promise<object|null>}
  */
 async function getUserProfile(email) {
-    const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
-    if (error) { console.warn('Gagal ambil profil:', error.message); return null; }
-    return data;
+    if (!supabase) return null;
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+        if (error) { console.warn('Gagal ambil profil:', error.message); return null; }
+        return data;
+    } catch (e) {
+        console.warn('getUserProfile error:', e.message);
+        return null;
+    }
 }
 
 /**
  * Logout user dan redirect ke halaman login.
+ * Fungsi ini SELALU redirect, bahkan jika Supabase gagal.
  */
 async function signOut() {
-    await supabase.auth.signOut();
-    localStorage.removeItem('warlo_user');
-    sessionStorage.removeItem('warlo_user');
-    window.location.href = (window.location.pathname.includes('/admin/') || window.location.pathname.includes('/user/'))
-        ? '../login.html'
-        : 'login.html';
+    // Coba logout dari Supabase (jika ada)
+    try {
+        if (supabase) await supabase.auth.signOut();
+    } catch (e) {
+        console.warn('signOut Supabase error (diabaikan):', e.message);
+    }
+
+    // Bersihkan storage lokal
+    try {
+        localStorage.removeItem('warlo_user');
+        sessionStorage.removeItem('warlo_user');
+        localStorage.removeItem('sb-mwxdbrchbphrwveqxcev-auth-token');
+    } catch (e) {}
+
+    // SELALU redirect ke login
+    var loginPath = 'login.html';
+    if (window.location.pathname.indexOf('/admin/') !== -1 || window.location.pathname.indexOf('/user/') !== -1) {
+        loginPath = '../login.html';
+    }
+    window.location.href = loginPath;
 }
 
 /**
@@ -66,23 +108,25 @@ async function signOut() {
  * @returns {Promise<object|null>} profil user dari tabel public.users
  */
 async function checkAuth(requiredRole) {
-    const session = await getSession();
+    var session = await getSession();
     if (!session) {
-        const loginPath = (window.location.pathname.includes('/admin/') || window.location.pathname.includes('/user/'))
-            ? '../login.html'
-            : 'login.html';
+        // Tidak ada session → redirect ke login
+        var loginPath = 'login.html';
+        if (window.location.pathname.indexOf('/admin/') !== -1 || window.location.pathname.indexOf('/user/') !== -1) {
+            loginPath = '../login.html';
+        }
         window.location.href = loginPath;
         return null;
     }
 
     // Ambil profil dari tabel public.users
-    const profile = await getUserProfile(session.user.email);
+    var profile = await getUserProfile(session.user.email);
 
     // Cek role jika diperlukan
     if (requiredRole && profile && profile.role !== requiredRole) {
         alert('Anda tidak memiliki akses ke halaman ini.');
-        const fallback = profile.role === 'admin' ? 'admin/dashboard.html' : 'user/peta.html';
-        const basePath = (window.location.pathname.includes('/admin/') || window.location.pathname.includes('/user/'))
+        var fallback = profile.role === 'admin' ? 'admin/dashboard.html' : 'user/peta.html';
+        var basePath = (window.location.pathname.indexOf('/admin/') !== -1 || window.location.pathname.indexOf('/user/') !== -1)
             ? '../' + fallback
             : fallback;
         window.location.href = basePath;
@@ -99,7 +143,7 @@ async function checkAuth(requiredRole) {
  */
 function getInisial(nama) {
     if (!nama) return '?';
-    const parts = nama.trim().split(/\s+/);
+    var parts = nama.trim().split(/\s+/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return parts[0].substring(0, 2).toUpperCase();
 }
