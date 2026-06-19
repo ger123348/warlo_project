@@ -704,7 +704,7 @@ loadGeoJson('../assets/data/lampung.geojson', data => {
   }).addTo(map);
 });
 
-loadGeoJson('../assets/data/histori_longsor.geojson', data => {
+loadGeoJson('../assets/data/history_longsor.geojson', data => {
   var count = (data.features||[]).length;
   statsCount.longsor = count;
   updateStatCard('longsor', count);
