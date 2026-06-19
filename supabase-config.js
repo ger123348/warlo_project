@@ -78,9 +78,9 @@ async function signOut() {
         localStorage.removeItem('sb-mwxdbrchbphrwveqxcev-auth-token');
     } catch (e) {}
 
-    var loginPath = 'login.html';
+    var loginPath = 'index.html';
     if (window.location.pathname.indexOf('/admin/') !== -1 || window.location.pathname.indexOf('/user/') !== -1) {
-        loginPath = '../login.html';
+        loginPath = '../index.html';
     }
     window.location.href = loginPath;
 }
