@@ -483,11 +483,20 @@
         <span class="sb-icon"><i class="bi bi-book-fill"></i></span><span>Edukasi</span>
       </a>
     </nav>
-    <div class="sb-bottom">
-      <button class="sb-darurat" onclick="toggleDarurat()" title="Darurat SOS">
-        <i class="bi bi-exclamation-octagon-fill" style="color:#f87171"></i>
-      </button>
-      <a href="../index.html" class="sb-home"><i class="bi bi-house-fill"></i></a>
+    <div class="sb-bottom" style="flex-direction:column; align-items:stretch; gap:10px;">
+      <div id="sb-user-area" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:14px;background:rgba(255,255,255,.08);backdrop-filter:blur(8px);">
+        <div class="sb-avatar" id="sb-avatar" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;background:linear-gradient(135deg,var(--g-300),var(--g-500));color:#fff;">?</div>
+        <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+          <span id="sb-nama" style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Loading...</span>
+        </div>
+        <button onclick="signOut()" style="background:none;border:none;color:#f87171;cursor:pointer;padding:4px;font-size:16px;" title="Keluar"><i class="bi bi-box-arrow-right"></i></button>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="sb-darurat" style="flex:1" onclick="toggleDarurat()" title="Darurat SOS">
+          <i class="bi bi-exclamation-octagon-fill" style="color:#f87171"></i>
+        </button>
+        <a href="../index.html" class="sb-home" style="flex:1;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;"><i class="bi bi-house-fill"></i></a>
+      </div>
     </div>
   </div>
 
@@ -648,8 +657,19 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ── AUTH GUARD ──
+(async function() {
+  const profile = await checkAuth('user');
+  if (profile) {
+    document.getElementById('sb-avatar').textContent = getInisial(profile.nama);
+    document.getElementById('sb-nama').textContent = profile.nama.split(' ')[0]; // Ambil kata pertama
+  }
+})();
+
 const OWM_KEY = 'a426bae7236755fffc453e7e570b3835';
 const API_BASE = '';
 

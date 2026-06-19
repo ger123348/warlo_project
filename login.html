@@ -183,15 +183,25 @@
     </form>
 
     <div class="switch-auth">Belum punya akun? <a href="register.html">Daftar sekarang</a></div>
-    <div class="api-hint"><i class="bi bi-hdd-network"></i> Terhubung ke API <code>http://localhost:3000</code> &mdash; lihat README untuk setup database PostgreSQL.</div>
+    <div class="api-hint"><i class="bi bi-shield-check"></i> Autentikasi aman via Supabase Auth</div>
   </div>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
-  const API_BASE = '';
+  // ─── Cek apakah sudah login ───
+  (async function() {
+    const session = await getSession();
+    if (session) {
+      const profile = await getUserProfile(session.user.email);
+      const role = (profile && profile.role) || 'user';
+      window.location.href = role === 'admin' ? 'admin/dashboard.html' : 'user/peta.html';
+    }
+  })();
 
-  // toggle password visibility
+  // ─── Toggle password visibility ───
   const pwInput = document.getElementById('password');
   document.getElementById('toggle-pw').addEventListener('click', () => {
     const showing = pwInput.type === 'text';
@@ -201,7 +211,7 @@
       : '<i class="bi bi-eye-slash-fill"></i>';
   });
 
-  function showMsg(text, type){
+  function showMsg(text, type) {
     const el = document.getElementById('msg');
     el.className = 'alert-msg ' + type;
     el.innerHTML = (type === 'error'
@@ -209,16 +219,16 @@
         : '<i class="bi bi-check-circle-fill"></i> ') + text;
   }
 
-  document.getElementById('forgot-link').addEventListener('click', (e)=>{
+  document.getElementById('forgot-link').addEventListener('click', (e) => {
     e.preventDefault();
     showMsg('Hubungi admin BPBD setempat untuk reset kata sandi akun Anda.', 'success');
   });
 
-  document.getElementById('form-login').addEventListener('submit', function(e){
+  // ─── FORM SUBMIT: Login via Supabase Auth ───
+  document.getElementById('form-login').addEventListener('submit', async function(e) {
     e.preventDefault();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const remember = document.getElementById('remember').checked;
 
     const btn = document.getElementById('btn-submit');
     const btnText = document.getElementById('btn-text');
@@ -227,35 +237,37 @@
     btnText.textContent = 'Memproses...';
     btnIcon.className = 'bi bi-arrow-repeat';
 
-    fetch(`${API_BASE}/api/auth/login`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ email, password })
-    })
-    .then(async res => {
-      const data = await res.json().catch(()=>({}));
-      if(!res.ok) throw new Error(data.message || 'Email atau kata sandi salah.');
-      return data;
-    })
-    .then(data => {
-      showMsg('Login berhasil! Mengalihkan...', 'success');
-      const storage = remember ? localStorage : sessionStorage;
-      storage.setItem('warlo_token', data.token || '');
-      storage.setItem('warlo_user', JSON.stringify(data.user || {}));
+    try {
+      // 1. Login via Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
 
-      const role = (data.user && data.user.role) || 'user';
+      // 2. Ambil profil dari tabel public.users
+      const profile = await getUserProfile(email);
+      if (profile) {
+        localStorage.setItem('warlo_user', JSON.stringify(profile));
+      }
+
+      showMsg('Login berhasil! Mengalihkan...', 'success');
+
+      // 3. Redirect berdasarkan role
+      const role = (profile && profile.role) || 'user';
       setTimeout(() => {
         window.location.href = role === 'admin' ? 'admin/dashboard.html' : 'user/peta.html';
       }, 600);
-    })
-    .catch(err => {
-      showMsg(err.message || 'Tidak dapat terhubung ke server. Pastikan backend & PostgreSQL aktif di port 3000.', 'error');
-    })
-    .finally(() => {
+
+    } catch (err) {
+      const msg = err.message || 'Login gagal. Periksa email dan kata sandi Anda.';
+      // Terjemahkan pesan error Supabase yang umum
+      const translated = msg.includes('Invalid login') ? 'Email atau kata sandi salah.'
+                       : msg.includes('Email not confirmed') ? 'Email belum diverifikasi. Cek inbox email Anda.'
+                       : msg;
+      showMsg(translated, 'error');
+    } finally {
       btn.disabled = false;
       btnText.textContent = 'Masuk';
       btnIcon.className = 'bi bi-arrow-right-circle-fill';
-    });
+    }
   });
 </script>
 </body>

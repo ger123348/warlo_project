@@ -344,9 +344,12 @@
   <div class="sb-section">Lainnya</div>
   <a href="../user/peta.html" class="btn-user-web"><i class="bi bi-map-fill"></i> Buka Halaman User</a>
   <div class="sb-bottom">
-    <div class="sb-user">
-      <div class="sb-avatar">A</div>
-      <div class="sb-user-info"><div class="name">Admin BPBD</div><div class="role">Provinsi Lampung</div></div>
+    <div class="sb-user" style="justify-content:space-between;width:100%;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="sb-avatar" id="sb-avatar">A</div>
+        <div class="sb-user-info"><div class="name" id="sb-nama">Loading...</div><div class="role">Admin Sistem</div></div>
+      </div>
+      <button onclick="signOut()" style="background:none;border:none;color:#f87171;cursor:pointer;padding:4px;" title="Keluar"><i class="bi bi-box-arrow-right"></i></button>
     </div>
   </div>
 </div>
@@ -410,7 +413,18 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
 <script>
+// ── AUTH GUARD ──
+(async function() {
+  const profile = await checkAuth('admin');
+  if (profile) {
+    document.getElementById('sb-avatar').textContent = getInisial(profile.nama);
+    document.getElementById('sb-nama').textContent = profile.nama;
+  }
+})();
+
 const API_BASE = '';
 function updateClock(){var now=new Date();document.getElementById('clock').textContent=now.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+' · '+now.toLocaleTimeString('id-ID');}
 updateClock();setInterval(updateClock,1000);

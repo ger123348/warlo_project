@@ -214,25 +214,33 @@
     </form>
 
     <div class="switch-auth">Sudah punya akun? <a href="login.html">Masuk di sini</a></div>
-    <div class="api-hint"><i class="bi bi-hdd-network"></i> Terhubung ke API <code>http://localhost:3000</code> &mdash; lihat README untuk setup database PostgreSQL.</div>
+    <div class="api-hint"><i class="bi bi-shield-check"></i> Autentikasi aman via Supabase Auth</div>
   </div>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
-  const API_BASE = '';
+  // ─── Cek apakah sudah login ───
+  (async function() {
+    const session = await getSession();
+    if (session) {
+      window.location.href = 'user/peta.html';
+    }
+  })();
 
-  function togglePw(inputId, iconId){
+  function togglePw(inputId, iconId) {
     const input = document.getElementById(inputId);
     const icon = document.getElementById(iconId);
     const showing = input.type === 'text';
     input.type = showing ? 'password' : 'text';
     icon.innerHTML = showing ? '<i class="bi bi-eye-fill"></i>' : '<i class="bi bi-eye-slash-fill"></i>';
   }
-  document.getElementById('toggle-pw').addEventListener('click', ()=>togglePw('password','toggle-pw'));
-  document.getElementById('toggle-pw2').addEventListener('click', ()=>togglePw('konfirmasi','toggle-pw2'));
+  document.getElementById('toggle-pw').addEventListener('click', () => togglePw('password', 'toggle-pw'));
+  document.getElementById('toggle-pw2').addEventListener('click', () => togglePw('konfirmasi', 'toggle-pw2'));
 
-  function showMsg(text, type){
+  function showMsg(text, type) {
     const el = document.getElementById('msg');
     el.className = 'alert-msg ' + type;
     el.innerHTML = (type === 'error'
@@ -240,7 +248,8 @@
         : '<i class="bi bi-check-circle-fill"></i> ') + text;
   }
 
-  document.getElementById('form-register').addEventListener('submit', function(e){
+  // ─── FORM SUBMIT: Register via Supabase Auth ───
+  document.getElementById('form-register').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const nama = document.getElementById('nama').value.trim();
@@ -249,11 +258,11 @@
     const password = document.getElementById('password').value;
     const konfirmasi = document.getElementById('konfirmasi').value;
 
-    if(password !== konfirmasi){
+    if (password !== konfirmasi) {
       showMsg('Konfirmasi kata sandi tidak cocok.', 'error');
       return;
     }
-    if(password.length < 6){
+    if (password.length < 6) {
       showMsg('Kata sandi minimal 6 karakter.', 'error');
       return;
     }
@@ -265,28 +274,55 @@
     btnText.textContent = 'Memproses...';
     btnIcon.className = 'bi bi-arrow-repeat';
 
-    fetch(`${API_BASE}/api/auth/register`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ nama, email, telepon, password })
-    })
-    .then(async res => {
-      const data = await res.json().catch(()=>({}));
-      if(!res.ok) throw new Error(data.message || 'Pendaftaran gagal. Coba lagi.');
-      return data;
-    })
-    .then(data => {
-      showMsg('Pendaftaran berhasil! Mengalihkan ke halaman masuk...', 'success');
-      setTimeout(() => { window.location.href = 'login.html'; }, 900);
-    })
-    .catch(err => {
-      showMsg(err.message || 'Tidak dapat terhubung ke server. Pastikan backend & PostgreSQL aktif di port 3000.', 'error');
-    })
-    .finally(() => {
+    try {
+      // 1. Daftar via Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { nama, telepon }
+        }
+      });
+      if (error) throw error;
+
+      // 2. Simpan profil ke tabel public.users
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert([{
+          nama: nama,
+          email: email,
+          telepon: telepon || null,
+          password_hash: 'supabase_auth',
+          role: 'user'
+        }]);
+
+      if (insertError) {
+        console.warn('Profil insert warning:', insertError.message);
+        // Tidak fatal — auth sudah berhasil
+      }
+
+      // 3. Cek apakah perlu konfirmasi email
+      if (data.user && !data.session) {
+        // Email confirmation aktif
+        showMsg('Pendaftaran berhasil! Cek inbox email Anda untuk verifikasi, lalu masuk.', 'success');
+      } else {
+        showMsg('Pendaftaran berhasil! Mengalihkan ke halaman masuk...', 'success');
+      }
+
+      setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+
+    } catch (err) {
+      const msg = err.message || 'Pendaftaran gagal. Coba lagi.';
+      const translated = msg.includes('already registered') ? 'Email ini sudah terdaftar. Silakan masuk.'
+                       : msg.includes('valid email') ? 'Format email tidak valid.'
+                       : msg.includes('at least') ? 'Kata sandi terlalu pendek (min. 6 karakter).'
+                       : msg;
+      showMsg(translated, 'error');
+    } finally {
       btn.disabled = false;
       btnText.textContent = 'Daftar Sekarang';
       btnIcon.className = 'bi bi-person-plus-fill';
-    });
+    }
   });
 </script>
 </body>
