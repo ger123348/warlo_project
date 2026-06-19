@@ -82,4 +82,42 @@ app.post('/api/simulasi', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log('🚀 Server WARLO online di: http://localhost:3000'));
+// === ENDPOINT BARU UNTUK ADMIN ===
+
+// Hapus data (Titik Rawan / Balai) berdasarkan ID
+app.delete('/api/simulasi/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Coba hapus di tabel rawan_longsor_db
+        const resRawan = await pool.query('DELETE FROM rawan_longsor_db WHERE id = $1', [id]);
+        // Jika tidak ada yang terhapus, coba hapus di balai_db
+        if (resRawan.rowCount === 0) {
+            await pool.query('DELETE FROM balai_db WHERE id = $1', [id]);
+        }
+        res.json({ message: "Titik berhasil dihapus dari database" });
+    } catch (err) {
+        console.error("Gagal hapus:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Menyimpan status simulasi darurat (di memory agar cepat)
+let statusDarurat = { 
+    aktif: false, 
+    pesan: "Situasi aman. Tidak ada indikasi longsor terdeteksi.",
+    level: "normal" // normal, waspada, bahaya
+};
+
+app.get('/api/simulasi/status', (req, res) => {
+    res.json(statusDarurat);
+});
+
+app.post('/api/simulasi/status', (req, res) => {
+    const { aktif, pesan, level } = req.body;
+    if (typeof aktif !== 'undefined') statusDarurat.aktif = aktif;
+    if (pesan) statusDarurat.pesan = pesan;
+    if (level) statusDarurat.level = level;
+    res.json({ message: "Status simulasi berhasil diubah", status: statusDarurat });
+});
+
+app.listen(PORT, () => console.log(`🚀 Server WARLO online di: http://localhost:${PORT}`));
