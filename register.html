@@ -276,7 +276,7 @@
 
     try {
       // 1. Daftar via Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await sbClient.auth.signUp({
         email,
         password,
         options: {
@@ -286,7 +286,7 @@
       if (error) throw error;
 
       // 2. Simpan profil ke tabel public.users
-      const { error: insertError } = await supabase
+      const { error: insertError } = await sbClient
         .from('users')
         .insert([{
           nama: nama,

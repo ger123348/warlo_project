@@ -5,17 +5,18 @@
    ============================================================ */
 
 // ─── KREDENSIAL SUPABASE ───
-const SUPABASE_URL  = 'https://mwxdbrchbphrwveqxcev.supabase.co';
-const SUPABASE_ANON = 'sb_publishable__uaqwsVXPBUCOzBttGnU8g_t09dHxYp';
+var SUPABASE_URL  = 'https://mwxdbrchbphrwveqxcev.supabase.co';
+var SUPABASE_ANON = 'sb_publishable__uaqwsVXPBUCOzBttGnU8g_t09dHxYp';
 
-// ─── INISIALISASI CLIENT (dengan fallback jika gagal) ───
-var supabase = null;
+// ─── INISIALISASI CLIENT ───
+// Catatan: CDN Supabase mendaftarkan window.supabase, jadi kita pakai nama berbeda
+var sbClient = null;
 try {
     if (window.supabase && window.supabase.createClient) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+        sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
         console.log('✅ Supabase client berhasil diinisialisasi');
     } else {
-        console.error('❌ Supabase SDK belum dimuat. Pastikan CDN script di-load terlebih dahulu.');
+        console.error('❌ Supabase SDK belum dimuat.');
     }
 } catch (e) {
     console.error('❌ Gagal inisialisasi Supabase:', e.message);
@@ -23,51 +24,38 @@ try {
 
 // ─── HELPER FUNCTIONS ───
 
-/**
- * Ambil session aktif saat ini.
- * @returns {Promise<object|null>} session object atau null
- */
 async function getSession() {
-    if (!supabase) return null;
+    if (!sbClient) return null;
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        return session;
+        var result = await sbClient.auth.getSession();
+        return result.data.session;
     } catch (e) {
         console.warn('getSession error:', e.message);
         return null;
     }
 }
 
-/**
- * Ambil data user yang sedang login.
- * @returns {Promise<object|null>} user object atau null
- */
 async function getUser() {
-    if (!supabase) return null;
+    if (!sbClient) return null;
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        return user;
+        var result = await sbClient.auth.getUser();
+        return result.data.user;
     } catch (e) {
         console.warn('getUser error:', e.message);
         return null;
     }
 }
 
-/**
- * Ambil profil user dari tabel public.users berdasarkan email.
- * @param {string} email
- * @returns {Promise<object|null>}
- */
 async function getUserProfile(email) {
-    if (!supabase) return null;
+    if (!sbClient) return null;
     try {
-        const { data, error } = await supabase
+        var result = await sbClient
             .from('users')
             .select('*')
             .eq('email', email)
             .single();
-        if (error) { console.warn('Gagal ambil profil:', error.message); return null; }
-        return data;
+        if (result.error) { console.warn('Gagal ambil profil:', result.error.message); return null; }
+        return result.data;
     } catch (e) {
         console.warn('getUserProfile error:', e.message);
         return null;
@@ -76,24 +64,20 @@ async function getUserProfile(email) {
 
 /**
  * Logout user dan redirect ke halaman login.
- * Fungsi ini SELALU redirect, bahkan jika Supabase gagal.
+ * SELALU redirect, bahkan jika Supabase error.
  */
 async function signOut() {
-    // Coba logout dari Supabase (jika ada)
     try {
-        if (supabase) await supabase.auth.signOut();
+        if (sbClient) await sbClient.auth.signOut();
     } catch (e) {
-        console.warn('signOut Supabase error (diabaikan):', e.message);
+        console.warn('signOut error (diabaikan):', e.message);
     }
-
-    // Bersihkan storage lokal
     try {
         localStorage.removeItem('warlo_user');
         sessionStorage.removeItem('warlo_user');
         localStorage.removeItem('sb-mwxdbrchbphrwveqxcev-auth-token');
     } catch (e) {}
 
-    // SELALU redirect ke login
     var loginPath = 'login.html';
     if (window.location.pathname.indexOf('/admin/') !== -1 || window.location.pathname.indexOf('/user/') !== -1) {
         loginPath = '../login.html';
@@ -102,15 +86,11 @@ async function signOut() {
 }
 
 /**
- * Cek apakah user sudah login. Jika belum, redirect ke login.
- * Jika sudah, kembalikan data profil.
- * @param {string} [requiredRole] - Jika diisi, cek apakah role user sesuai
- * @returns {Promise<object|null>} profil user dari tabel public.users
+ * Cek auth. Jika belum login → redirect ke login.
  */
 async function checkAuth(requiredRole) {
     var session = await getSession();
     if (!session) {
-        // Tidak ada session → redirect ke login
         var loginPath = 'login.html';
         if (window.location.pathname.indexOf('/admin/') !== -1 || window.location.pathname.indexOf('/user/') !== -1) {
             loginPath = '../login.html';
@@ -119,10 +99,8 @@ async function checkAuth(requiredRole) {
         return null;
     }
 
-    // Ambil profil dari tabel public.users
     var profile = await getUserProfile(session.user.email);
 
-    // Cek role jika diperlukan
     if (requiredRole && profile && profile.role !== requiredRole) {
         alert('Anda tidak memiliki akses ke halaman ini.');
         var fallback = profile.role === 'admin' ? 'admin/dashboard.html' : 'user/peta.html';
@@ -136,11 +114,6 @@ async function checkAuth(requiredRole) {
     return profile;
 }
 
-/**
- * Ambil inisial dari nama user (maks 2 huruf).
- * @param {string} nama
- * @returns {string}
- */
 function getInisial(nama) {
     if (!nama) return '?';
     var parts = nama.trim().split(/\s+/);
